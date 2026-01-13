@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/kyleking/gh-workflow-runner/internal/app"
+	"github.com/kyleking/gh-workflow-runner/internal/frecency"
 	"github.com/kyleking/gh-workflow-runner/internal/workflow"
 )
 
@@ -25,15 +28,22 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Printf("Found %d dispatchable workflow(s):\n", len(workflows))
-	for _, wf := range workflows {
-		name := wf.Name
-		if name == "" {
-			name = "(unnamed)"
-		}
-		fmt.Printf("  - %s (%s)\n", wf.Filename, name)
-		for key, input := range wf.GetInputs() {
-			fmt.Printf("      %s: %s (type: %s)\n", key, input.Description, input.InputType())
-		}
+	history, err := frecency.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not load history: %v\n", err)
+		history = frecency.NewStore()
 	}
+
+	repo := detectRepo()
+	model := app.New(workflows, history, repo)
+
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func detectRepo() string {
+	return "owner/repo"
 }
