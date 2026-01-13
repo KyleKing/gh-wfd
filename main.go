@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kyleking/gh-workflow-runner/internal/app"
 	"github.com/kyleking/gh-workflow-runner/internal/frecency"
+	"github.com/kyleking/gh-workflow-runner/internal/runner"
 	"github.com/kyleking/gh-workflow-runner/internal/workflow"
 )
 
@@ -28,13 +29,18 @@ func main() {
 		os.Exit(0)
 	}
 
+	repo, err := runner.DetectRepo()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not detect repository: %v\n", err)
+		repo = "unknown/unknown"
+	}
+
 	history, err := frecency.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not load history: %v\n", err)
 		history = frecency.NewStore()
 	}
 
-	repo := detectRepo()
 	model := app.New(workflows, history, repo)
 
 	p := tea.NewProgram(model, tea.WithAltScreen())
@@ -42,8 +48,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
 		os.Exit(1)
 	}
-}
-
-func detectRepo() string {
-	return "owner/repo"
 }
