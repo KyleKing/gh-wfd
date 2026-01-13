@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -11,7 +12,32 @@ import (
 	"github.com/kyleking/gh-workflow-runner/internal/workflow"
 )
 
+var (
+	version = "dev"
+)
+
 func main() {
+	var (
+		showVersion bool
+		showHelp    bool
+	)
+
+	flag.BoolVar(&showVersion, "version", false, "Show version")
+	flag.BoolVar(&showVersion, "v", false, "Show version (shorthand)")
+	flag.BoolVar(&showHelp, "help", false, "Show help")
+	flag.BoolVar(&showHelp, "h", false, "Show help (shorthand)")
+	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("gh-workflow-runner %s\n", version)
+		os.Exit(0)
+	}
+
+	if showHelp {
+		printHelp()
+		os.Exit(0)
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting current directory: %v\n", err)
@@ -26,6 +52,7 @@ func main() {
 
 	if len(workflows) == 0 {
 		fmt.Println("No dispatchable workflows found in .github/workflows/")
+		fmt.Println("\nWorkflows must have 'workflow_dispatch' trigger to be dispatchable.")
 		os.Exit(0)
 	}
 
@@ -48,4 +75,32 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error running program: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func printHelp() {
+	fmt.Println(`gh-workflow-runner - Interactive GitHub Actions workflow dispatcher
+
+Usage:
+  gh workflow-runner [flags]
+
+Description:
+  A TUI for triggering GitHub Actions workflow_dispatch workflows with
+  fuzzy selection, interactive input configuration, and frecency-based
+  history tracking.
+
+Flags:
+  -h, --help     Show this help message
+  -v, --version  Show version
+
+Keyboard Shortcuts:
+  Tab / Shift+Tab    Switch between panes
+  ↑/k, ↓/j           Navigate within pane
+  Enter              Select / Execute workflow
+  b                  Select branch
+  w                  Toggle watch mode
+  1-9                Edit input by number
+  ?                  Show help
+  q, Ctrl+C          Quit
+
+For more information: https://github.com/kyleking/gh-workflow-runner`)
 }
