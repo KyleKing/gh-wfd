@@ -99,7 +99,7 @@ func placeCenter(background, modal string, width, height int) string {
 		BorderStyle(lipgloss.DoubleBorder()).
 		BorderForeground(ui.PrimaryColor).
 		Padding(1, 2).
-		Background(lipgloss.Color("235"))
+		Background(ui.ModalBgColor)
 
 	styledModal := modalStyle.Render(modal)
 	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, styledModal, lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(lipgloss.NoColor{}))

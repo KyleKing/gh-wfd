@@ -9,6 +9,8 @@ import (
 	"github.com/kyleking/gh-workflow-runner/internal/app"
 	"github.com/kyleking/gh-workflow-runner/internal/frecency"
 	"github.com/kyleking/gh-workflow-runner/internal/runner"
+	"github.com/kyleking/gh-workflow-runner/internal/ui"
+	"github.com/kyleking/gh-workflow-runner/internal/ui/theme"
 	"github.com/kyleking/gh-workflow-runner/internal/workflow"
 )
 
@@ -68,6 +70,9 @@ func main() {
 		history = frecency.NewStore()
 	}
 
+	detectedTheme := theme.Detect()
+	ui.InitTheme(detectedTheme)
+
 	model := app.New(workflows, history, repo)
 
 	p := tea.NewProgram(model, tea.WithAltScreen())
@@ -91,6 +96,9 @@ Description:
 Flags:
   -h, --help     Show this help message
   -v, --version  Show version
+
+Environment Variables:
+  CATPPUCCIN_THEME   Override theme (latte/macchiato)
 
 Keyboard Shortcuts:
   Tab / Shift+Tab    Switch between panes

@@ -1,42 +1,73 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	"github.com/kyleking/gh-workflow-runner/internal/ui/theme"
+)
+
+var currentTheme theme.Theme
 
 // Colors used throughout the UI.
 var (
-	PrimaryColor   = lipgloss.Color("205")
-	SecondaryColor = lipgloss.Color("240")
-	AccentColor    = lipgloss.Color("86")
-	MutedColor     = lipgloss.Color("245")
+	PrimaryColor   lipgloss.Color
+	SecondaryColor lipgloss.Color
+	AccentColor    lipgloss.Color
+	MutedColor     lipgloss.Color
+	TextColor      lipgloss.Color
+	ModalBgColor   lipgloss.Color
 )
 
-// Styles for the application.
+// Styles for the application (initialized in ApplyTheme).
 var (
+	TitleStyle         lipgloss.Style
+	SubtitleStyle      lipgloss.Style
+	SelectedStyle      lipgloss.Style
+	NormalStyle        lipgloss.Style
+	HelpStyle          lipgloss.Style
+	BorderStyle        lipgloss.Style
+	FocusedBorderStyle lipgloss.Style
+)
+
+// InitTheme sets the theme and applies colors.
+func InitTheme(t theme.Theme) {
+	currentTheme = t
+	ApplyTheme()
+}
+
+// ApplyTheme updates all colors and styles from current theme.
+func ApplyTheme() {
+	PrimaryColor = currentTheme.Primary
+	SecondaryColor = currentTheme.Secondary
+	AccentColor = currentTheme.Accent
+	MutedColor = currentTheme.Muted
+	TextColor = currentTheme.Text
+	ModalBgColor = currentTheme.ModalBg
+
 	TitleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(PrimaryColor)
+		Bold(true).
+		Foreground(PrimaryColor)
 
 	SubtitleStyle = lipgloss.NewStyle().
-			Foreground(MutedColor)
+		Foreground(MutedColor)
 
 	SelectedStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(AccentColor)
+		Bold(true).
+		Foreground(AccentColor)
 
 	NormalStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("252"))
+		Foreground(TextColor)
 
 	HelpStyle = lipgloss.NewStyle().
-			Foreground(MutedColor)
+		Foreground(MutedColor)
 
 	BorderStyle = lipgloss.NewStyle().
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(SecondaryColor)
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(SecondaryColor)
 
 	FocusedBorderStyle = lipgloss.NewStyle().
-				BorderStyle(lipgloss.RoundedBorder()).
-				BorderForeground(PrimaryColor)
-)
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(PrimaryColor)
+}
 
 // PaneStyle returns a style for a pane with optional focus.
 func PaneStyle(width, height int, focused bool) lipgloss.Style {
