@@ -1,8 +1,6 @@
 package modal
 
 import (
-	"strings"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kyleking/gh-workflow-runner/internal/ui"
@@ -104,54 +102,7 @@ func placeCenter(background, modal string, width, height int) string {
 		Background(lipgloss.Color("235"))
 
 	styledModal := modalStyle.Render(modal)
-
-	modalWidth := lipgloss.Width(styledModal)
-	modalHeight := lipgloss.Height(styledModal)
-
-	bgLines := strings.Split(background, "\n")
-	if len(bgLines) == 0 {
-		return styledModal
-	}
-
-	startRow := (height - modalHeight) / 2
-	startCol := (width - modalWidth) / 2
-
-	if startRow < 0 {
-		startRow = 0
-	}
-	if startCol < 0 {
-		startCol = 0
-	}
-
-	modalLines := strings.Split(styledModal, "\n")
-
-	for i, line := range modalLines {
-		row := startRow + i
-		if row >= len(bgLines) {
-			continue
-		}
-
-		bgLine := bgLines[row]
-		bgRunes := []rune(bgLine)
-
-		if startCol >= len(bgRunes) {
-			bgLines[row] = bgLine + strings.Repeat(" ", startCol-len(bgRunes)) + line
-			continue
-		}
-
-		endCol := startCol + lipgloss.Width(line)
-		if endCol > len(bgRunes) {
-			endCol = len(bgRunes)
-		}
-
-		newLine := string(bgRunes[:startCol]) + line
-		if endCol < len(bgRunes) {
-			newLine += string(bgRunes[endCol:])
-		}
-		bgLines[row] = newLine
-	}
-
-	return strings.Join(bgLines, "\n")
+	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, styledModal, lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(lipgloss.NoColor{}))
 }
 
 // ModalClosedMsg is sent when a modal is closed.
