@@ -1,0 +1,26 @@
+name: Mixed Triggers
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      trigger_type:
+        description: 'Manual trigger type'
+        type: choice
+        options:
+          - test
+          - debug
+          - emergency
+        default: test
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Trigger: ${{ github.event_name }}"
+      - run: echo "Input: ${{ inputs.trigger_type }}"

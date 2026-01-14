@@ -1,0 +1,20 @@
+name: Environment Type Test
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deployment target environment'
+        type: environment
+        required: true
+      enable_monitoring:
+        description: 'Enable monitoring'
+        type: boolean
+        default: 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    steps:
+      - run: echo "Deploying to ${{ inputs.target }}"
+      - run: echo "Monitoring: ${{ inputs.enable_monitoring }}"

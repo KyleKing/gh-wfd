@@ -1,0 +1,35 @@
+name: Edge Cases & Special Characters
+on:
+  workflow_dispatch:
+    inputs:
+      no_description:
+        type: string
+      empty_default:
+        description: 'Field with empty default'
+        type: string
+        default: ''
+      special_chars:
+        description: "Test: quotes, $vars, @mentions, #tags, & ampersands"
+        type: string
+        default: 'foo=bar&baz=qux'
+      multiline_desc:
+        description: |
+          This is a multi-line description.
+          It spans multiple lines and may contain:
+          - Bullet points
+          - Code: `git commit -m "msg"`
+          - **Bold** and *italic* text
+        type: string
+      hyphenated-input:
+        description: 'Input with hyphens in key'
+        type: string
+        default: 'hyphen-test'
+      UPPERCASE_INPUT:
+        description: 'Input with uppercase key'
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Testing edge cases"

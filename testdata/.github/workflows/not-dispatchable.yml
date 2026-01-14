@@ -1,0 +1,12 @@
+name: Not Dispatchable
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches: [main]
+
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This workflow cannot be manually triggered"

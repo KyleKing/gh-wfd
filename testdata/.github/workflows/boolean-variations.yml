@@ -1,0 +1,28 @@
+name: Boolean Variations
+on:
+  workflow_dispatch:
+    inputs:
+      bool_true_string:
+        description: 'Boolean with string "true" default'
+        type: boolean
+        default: 'true'
+      bool_false_string:
+        description: 'Boolean with string "false" default'
+        type: boolean
+        default: 'false'
+      bool_no_default:
+        description: 'Boolean with no default'
+        type: boolean
+      bool_required:
+        description: 'Required boolean'
+        type: boolean
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "bool_true_string=${{ inputs.bool_true_string }}"
+      - run: echo "bool_false_string=${{ inputs.bool_false_string }}"
+      - run: echo "bool_no_default=${{ inputs.bool_no_default }}"
+      - run: echo "bool_required=${{ inputs.bool_required }}"

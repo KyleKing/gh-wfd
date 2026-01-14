@@ -1,0 +1,55 @@
+name: Many Inputs Test
+on:
+  workflow_dispatch:
+    inputs:
+      input_01:
+        description: 'First input field'
+        type: string
+        default: 'value1'
+      input_02:
+        description: 'Second input field'
+        type: string
+      input_03:
+        description: 'Third input field'
+        type: boolean
+        default: 'true'
+      input_04:
+        description: 'Fourth input field'
+        type: choice
+        options:
+          - option-a
+          - option-b
+          - option-c
+      input_05:
+        description: 'Fifth input field'
+        type: string
+        default: 'value5'
+      input_06:
+        description: 'Sixth input field'
+        type: boolean
+        default: 'false'
+      input_07:
+        description: 'Seventh input field'
+        type: string
+      input_08:
+        description: 'Eighth input field'
+        type: choice
+        options:
+          - alpha
+          - beta
+          - gamma
+          - delta
+        default: beta
+      input_09:
+        description: 'Ninth input field'
+        type: boolean
+      input_10:
+        description: 'Tenth input field'
+        type: string
+        default: 'final-value'
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Processing all inputs"

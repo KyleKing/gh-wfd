@@ -1,0 +1,49 @@
+name: Create Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        type: string
+      release_type:
+        description: 'Type of release'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - prerelease
+        default: patch
+      prerelease:
+        description: 'Mark as pre-release'
+        type: boolean
+        default: 'false'
+      draft:
+        description: 'Create as draft'
+        type: boolean
+        default: 'true'
+      changelog:
+        description: 'Release notes'
+        type: string
+        default: 'See CHANGELOG.md for details'
+      notify_slack:
+        description: 'Send Slack notification'
+        type: boolean
+        default: 'true'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release
+        run: |
+          echo "Version: ${{ inputs.version }}"
+          echo "Type: ${{ inputs.release_type }}"
+          echo "Prerelease: ${{ inputs.prerelease }}"
+          echo "Draft: ${{ inputs.draft }}"
+      - name: Notify
+        if: inputs.notify_slack == 'true'
+        run: echo "Sending Slack notification"
