@@ -7,6 +7,7 @@ type KeyMap struct {
 	Branch   key.Binding
 	Copy     key.Binding
 	Down     key.Binding
+	Edit     key.Binding
 	Enter    key.Binding
 	Escape   key.Binding
 	Filter   key.Binding
@@ -34,8 +35,9 @@ type KeyMap struct {
 func DefaultKeyMap() KeyMap {
 	return KeyMap{
 		Branch:   key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "branch")),
-		Copy:     key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy command")),
+		Copy:     key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy to clipboard")),
 		Down:     key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "down")),
+		Edit:     key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit")),
 		Enter:    key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select/run")),
 		Escape:   key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "back")),
 		Filter:   key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter")),
@@ -69,8 +71,8 @@ func (k KeyMap) ShortHelp() []key.Binding {
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Tab, k.ShiftTab, k.Up, k.Down},
-		{k.Enter, k.Escape, k.Branch, k.Watch},
-		{k.Filter, k.Copy, k.Reset},
+		{k.Enter, k.Edit, k.Escape, k.Branch},
+		{k.Watch, k.Filter, k.Copy, k.Reset},
 		{k.Input1, k.Input2, k.Input3, k.Input0},
 		{k.Quit, k.Help},
 	}

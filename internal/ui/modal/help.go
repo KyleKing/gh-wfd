@@ -46,7 +46,7 @@ func (m *HelpModal) View() string {
 
 ` + ui.SubtitleStyle.Render("Navigation") + `
   Tab / Shift+Tab    Switch between panes
-  ↑/k, ↓/j           Navigate / Select input
+  ↑/k, ↓/j           Navigate lists and select input
   Enter              Select / Execute / Edit selected
   Esc                Deselect / Close modal
 
@@ -54,8 +54,8 @@ func (m *HelpModal) View() string {
   1-9, 0             Edit input by number (1-10)
   b                  Select branch
   w                  Toggle watch mode
-  /                  Filter inputs
-  c                  Copy command to clipboard
+  /                  Start filtering inputs
+  c                  Command - copy to clipboard
   r                  Reset all inputs to defaults
 
 ` + ui.SubtitleStyle.Render("Input Editing") + `

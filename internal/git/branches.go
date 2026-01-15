@@ -32,6 +32,25 @@ func FetchBranches(ctx context.Context) ([]string, error) {
 	return branches, nil
 }
 
+// GetCurrentBranch returns the currently checked out branch.
+// Returns empty string if unable to determine (e.g., detached HEAD).
+func GetCurrentBranch(ctx context.Context) string {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "git", "rev-parse", "--abbrev-ref", "HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	branch := strings.TrimSpace(string(output))
+	if branch == "HEAD" {
+		return ""
+	}
+	return branch
+}
+
 // GetDefaultBranch attempts to determine the repository's default branch.
 // Returns empty string if unable to determine.
 func GetDefaultBranch(ctx context.Context) string {

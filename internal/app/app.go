@@ -59,11 +59,15 @@ type Model struct {
 
 // New creates a new application model.
 func New(workflows []workflow.WorkflowFile, history *frecency.Store, repo string) Model {
+	ctx := context.Background()
+	currentBranch := git.GetCurrentBranch(ctx)
+
 	m := Model{
 		focused:       PaneWorkflows,
 		workflows:     workflows,
 		history:       history,
 		repo:          repo,
+		branch:        currentBranch,
 		inputs:        make(map[string]string),
 		modalStack:    modal.NewStack(),
 		keys:          DefaultKeyMap(),
@@ -113,6 +117,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case modal.ResetResultMsg:
 		return m.handleResetResult(msg)
 
+	case modal.RunConfirmResultMsg:
+		return m.handleRunConfirmResult(msg)
+
 	case tea.KeyMsg:
 		return m.handleKeyMsg(msg)
 	}
@@ -160,6 +167,12 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case key.Matches(msg, m.keys.Enter):
 		return m.handleEnter()
+
+	case key.Matches(msg, m.keys.Edit):
+		if m.inputDetailMode && m.selectedInput >= 0 {
+			return m.openInputModalFiltered(m.selectedInput)
+		}
+		return m, nil
 
 	case key.Matches(msg, m.keys.Watch):
 		m.watchRun = !m.watchRun
@@ -287,12 +300,8 @@ func (m Model) executeWorkflow() (tea.Model, tea.Cmd) {
 		Watch:    m.watchRun,
 	}
 
-	m.history.Record(m.repo, wf.Filename, m.branch, m.inputs)
-	m.history.Save()
-
-	return m, tea.ExecProcess(exec.Command("gh", runner.BuildArgs(cfg)...), func(err error) tea.Msg {
-		return executionDoneMsg{err: err}
-	})
+	m.modalStack.Push(modal.NewRunConfirmModal(cfg))
+	return m, nil
 }
 
 type executionDoneMsg struct {
@@ -397,6 +406,22 @@ func (m Model) handleResetResult(msg modal.ResetResultMsg) (tea.Model, tea.Cmd) 
 	return m, nil
 }
 
+func (m Model) handleRunConfirmResult(msg modal.RunConfirmResultMsg) (tea.Model, tea.Cmd) {
+	if msg.Confirmed {
+		return m.doExecuteWorkflow(msg.Config)
+	}
+	return m, nil
+}
+
+func (m Model) doExecuteWorkflow(cfg runner.RunConfig) (tea.Model, tea.Cmd) {
+	m.history.Record(m.repo, cfg.Workflow, cfg.Branch, cfg.Inputs)
+	m.history.Save()
+
+	return m, tea.ExecProcess(exec.Command("gh", runner.BuildArgs(cfg)...), func(err error) tea.Msg {
+		return executionDoneMsg{err: err}
+	})
+}
+
 func (m *Model) applyFilter() {
 	if m.filterText == "" {
 		m.filteredInputs = m.inputOrder
@@ -429,7 +454,7 @@ func (m *Model) syncFilteredInputs() {
 }
 
 func (m Model) openFilterModal() (tea.Model, tea.Cmd) {
-	filterModal := modal.NewFilterModal("Filter Inputs", m.inputOrder, m.filterText)
+	filterModal := modal.NewFilterModal("Filter Inputs", m.inputOrder, "")
 	m.modalStack.Push(filterModal)
 	return m, nil
 }
@@ -663,7 +688,7 @@ func (m Model) viewInputDetailsPane(width, height int) string {
 	}
 
 	content.WriteString("\n\n")
-	content.WriteString(ui.HelpStyle.Render("[Esc] back  [Enter] edit"))
+	content.WriteString(ui.HelpStyle.Render("[Esc] back  [e] edit"))
 
 	return style.Render(content.String())
 }
@@ -789,7 +814,7 @@ func (m Model) viewConfigPane(width, height int) string {
 	content.WriteString(m.renderTableRows(height))
 
 	content.WriteString("\n\n")
-	content.WriteString(ui.SubtitleStyle.Render("Command:"))
+	content.WriteString(ui.SubtitleStyle.Render("Command ([c] copy):"))
 	content.WriteString("\n")
 	cliCmd := m.buildCLIString()
 	maxCmdWidth := width - 10
@@ -797,7 +822,6 @@ func (m Model) viewConfigPane(width, height int) string {
 		cliCmd = "..." + cliCmd[len(cliCmd)-maxCmdWidth+3:]
 	}
 	content.WriteString(ui.CLIPreviewStyle.Render(cliCmd))
-	content.WriteString(" [c]")
 
 	helpLine := "\n\n" + ui.HelpStyle.Render("[Tab] pane  [Enter] run  [j/k] select  [1-0] edit  [/] filter  [?] help  [q] quit")
 	content.WriteString(helpLine)
