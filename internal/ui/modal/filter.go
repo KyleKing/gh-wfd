@@ -7,7 +7,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kyleking/gh-wfd/internal/ui"
-	"github.com/sahilm/fuzzy"
 )
 
 // FilterResultMsg is sent when filter is applied or cancelled.
@@ -57,16 +56,7 @@ func NewFilterModal(title string, items []string, currentFilter string) *FilterM
 
 func (m *FilterModal) updateMatches() {
 	query := m.input.Value()
-	if query == "" {
-		m.matches = m.items
-		return
-	}
-
-	results := fuzzy.Find(query, m.items)
-	m.matches = make([]string, len(results))
-	for i, r := range results {
-		m.matches[i] = r.Str
-	}
+	m.matches = ui.ApplyFuzzyFilter(query, m.items)
 }
 
 // Update handles input for the filter modal.

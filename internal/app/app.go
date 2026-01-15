@@ -16,7 +16,6 @@ import (
 	"github.com/kyleking/gh-wfd/internal/ui"
 	"github.com/kyleking/gh-wfd/internal/ui/modal"
 	"github.com/kyleking/gh-wfd/internal/workflow"
-	"github.com/sahilm/fuzzy"
 )
 
 // FocusedPane represents which pane currently has focus.
@@ -207,128 +206,42 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case key.Matches(msg, m.keys.Input0):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(0)
+	default:
+		for i, k := range m.keys.InputKeys() {
+			if key.Matches(msg, k) {
+				return m.handleInputKey(i)
+			}
 		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input1):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(1)
+		for i, k := range m.keys.WorkflowKeys() {
+			if key.Matches(msg, k) {
+				return m.handleWorkflowKey(i)
+			}
 		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input2):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(2)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input3):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(3)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input4):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(4)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input5):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(5)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input6):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(6)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input7):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(7)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input8):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(8)
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Input9):
-		if m.focused == PaneConfig {
-			return m.openInputModalFiltered(9)
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.Workflow0):
-		if m.focused == PaneWorkflows {
-			m.selectedWorkflow = -1
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow1):
-		if m.focused == PaneWorkflows && len(m.workflows) > 0 {
-			m.selectedWorkflow = 0
-			m.initializeInputs(m.workflows[0])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow2):
-		if m.focused == PaneWorkflows && len(m.workflows) > 1 {
-			m.selectedWorkflow = 1
-			m.initializeInputs(m.workflows[1])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow3):
-		if m.focused == PaneWorkflows && len(m.workflows) > 2 {
-			m.selectedWorkflow = 2
-			m.initializeInputs(m.workflows[2])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow4):
-		if m.focused == PaneWorkflows && len(m.workflows) > 3 {
-			m.selectedWorkflow = 3
-			m.initializeInputs(m.workflows[3])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow5):
-		if m.focused == PaneWorkflows && len(m.workflows) > 4 {
-			m.selectedWorkflow = 4
-			m.initializeInputs(m.workflows[4])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow6):
-		if m.focused == PaneWorkflows && len(m.workflows) > 5 {
-			m.selectedWorkflow = 5
-			m.initializeInputs(m.workflows[5])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow7):
-		if m.focused == PaneWorkflows && len(m.workflows) > 6 {
-			m.selectedWorkflow = 6
-			m.initializeInputs(m.workflows[6])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow8):
-		if m.focused == PaneWorkflows && len(m.workflows) > 7 {
-			m.selectedWorkflow = 7
-			m.initializeInputs(m.workflows[7])
-			return m, nil
-		}
-		return m, nil
-	case key.Matches(msg, m.keys.Workflow9):
-		if m.focused == PaneWorkflows && len(m.workflows) > 8 {
-			m.selectedWorkflow = 8
-			m.initializeInputs(m.workflows[8])
-			return m, nil
-		}
-		return m, nil
 	}
 
+	return m, nil
+}
+
+func (m Model) handleInputKey(index int) (tea.Model, tea.Cmd) {
+	if m.focused == PaneConfig {
+		return m.openInputModalFiltered(index)
+	}
+	return m, nil
+}
+
+func (m Model) handleWorkflowKey(num int) (tea.Model, tea.Cmd) {
+	if m.focused != PaneWorkflows {
+		return m, nil
+	}
+	if num == 0 {
+		m.selectedWorkflow = -1
+		return m, nil
+	}
+	workflowIdx := num - 1
+	if workflowIdx < len(m.workflows) {
+		m.selectedWorkflow = workflowIdx
+		m.initializeInputs(m.workflows[workflowIdx])
+	}
 	return m, nil
 }
 
@@ -460,8 +373,13 @@ func (m Model) openInputModal(index int) (tea.Model, tea.Cmd) {
 	if index >= len(m.inputOrder) {
 		return m, nil
 	}
+	return m.openInputModalForName(m.inputOrder[index])
+}
 
-	name := m.inputOrder[index]
+func (m Model) openInputModalForName(name string) (tea.Model, tea.Cmd) {
+	if m.selectedWorkflow >= len(m.workflows) {
+		return m, nil
+	}
 	wf := m.workflows[m.selectedWorkflow]
 	inputs := wf.GetInputs()
 	input, ok := inputs[name]
@@ -551,15 +469,7 @@ func (m Model) doExecuteWorkflow(cfg runner.RunConfig) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) applyFilter() {
-	if m.filterText == "" {
-		m.filteredInputs = m.inputOrder
-	} else {
-		matches := fuzzy.Find(m.filterText, m.inputOrder)
-		m.filteredInputs = make([]string, len(matches))
-		for i, match := range matches {
-			m.filteredInputs[i] = match.Str
-		}
-	}
+	m.filteredInputs = ui.ApplyFuzzyFilter(m.filterText, m.inputOrder)
 	m.selectedInput = -1
 	m.viewMode = WorkflowListMode
 }
@@ -643,33 +553,7 @@ func (m Model) openInputModalFiltered(index int) (tea.Model, tea.Cmd) {
 	if index >= len(m.filteredInputs) {
 		return m, nil
 	}
-
-	name := m.filteredInputs[index]
-	if m.selectedWorkflow >= len(m.workflows) {
-		return m, nil
-	}
-	wf := m.workflows[m.selectedWorkflow]
-	inputs := wf.GetInputs()
-	input, ok := inputs[name]
-	if !ok {
-		return m, nil
-	}
-
-	m.pendingInputName = name
-	currentVal := m.inputs[name]
-
-	switch input.InputType() {
-	case "boolean":
-		current := currentVal == "true"
-		defaultVal := input.Default == "true"
-		m.modalStack.Push(modal.NewConfirmModal(name, input.Description, current, defaultVal))
-	case "choice":
-		m.modalStack.Push(modal.NewSelectModal(name, input.Options, currentVal, input.Default))
-	default:
-		m.modalStack.Push(modal.NewInputModal(name, input.Description, input.Default, input.InputType(), currentVal, input.Options))
-	}
-
-	return m, nil
+	return m.openInputModalForName(m.filteredInputs[index])
 }
 
 func (m *Model) initializeInputs(wf workflow.WorkflowFile) {
@@ -770,62 +654,70 @@ func (m Model) viewInputDetailsPane(width, height int) string {
 	}
 
 	var content strings.Builder
-
 	content.WriteString(ui.TitleStyle.Render("Input Details"))
 	content.WriteString("\n\n")
 
-	content.WriteString(ui.TitleStyle.Render(selectedName))
-	if input.Required {
-		content.WriteString(" ")
-		content.WriteString(ui.SelectedStyle.Render("(required)"))
-	}
-	content.WriteString("\n\n")
-
-	content.WriteString(ui.SubtitleStyle.Render("Type: "))
-	content.WriteString(ui.NormalStyle.Render(input.InputType()))
-	content.WriteString("\n")
-
-	if input.InputType() == "choice" && len(input.Options) > 0 {
-		content.WriteString("\n")
-		content.WriteString(ui.SubtitleStyle.Render("Options:"))
-		content.WriteString("\n")
-		for _, opt := range input.Options {
-			content.WriteString("  - ")
-			content.WriteString(ui.NormalStyle.Render(opt))
-			content.WriteString("\n")
-		}
-	}
-
-	if input.Description != "" {
-		content.WriteString("\n")
-		content.WriteString(ui.SubtitleStyle.Render("Description:"))
-		content.WriteString("\n")
-		wrapped := _wordWrap(input.Description, width-8)
-		content.WriteString(ui.NormalStyle.Render(wrapped))
-		content.WriteString("\n")
-	}
-
-	content.WriteString("\n")
-	content.WriteString(ui.SubtitleStyle.Render("Current: "))
-	currentVal := m.inputs[selectedName]
-	if currentVal == "" {
-		content.WriteString(ui.TableItalicStyle.Render(`("")`))
-	} else {
-		content.WriteString(ui.NormalStyle.Render(currentVal))
-	}
-
-	content.WriteString("\n")
-	content.WriteString(ui.SubtitleStyle.Render("Default: "))
-	if input.Default == "" {
-		content.WriteString(ui.TableItalicStyle.Render(`("")`))
-	} else {
-		content.WriteString(ui.NormalStyle.Render(input.Default))
-	}
+	_renderInputHeader(&content, selectedName, input.Required)
+	_renderInputType(&content, input.InputType())
+	_renderInputOptions(&content, input.InputType(), input.Options)
+	_renderInputDescription(&content, input.Description, width)
+	_renderInputValues(&content, m.inputs[selectedName], input.Default)
 
 	content.WriteString("\n\n")
 	content.WriteString(ui.HelpStyle.Render("[Esc] back  [e] edit"))
 
 	return style.Render(content.String())
+}
+
+func _renderInputHeader(content *strings.Builder, name string, required bool) {
+	content.WriteString(ui.TitleStyle.Render(name))
+	if required {
+		content.WriteString(" ")
+		content.WriteString(ui.SelectedStyle.Render("(required)"))
+	}
+	content.WriteString("\n\n")
+}
+
+func _renderInputType(content *strings.Builder, inputType string) {
+	content.WriteString(ui.SubtitleStyle.Render("Type: "))
+	content.WriteString(ui.NormalStyle.Render(inputType))
+	content.WriteString("\n")
+}
+
+func _renderInputOptions(content *strings.Builder, inputType string, options []string) {
+	if inputType != "choice" || len(options) == 0 {
+		return
+	}
+	content.WriteString("\n")
+	content.WriteString(ui.SubtitleStyle.Render("Options:"))
+	content.WriteString("\n")
+	for _, opt := range options {
+		content.WriteString("  - ")
+		content.WriteString(ui.NormalStyle.Render(opt))
+		content.WriteString("\n")
+	}
+}
+
+func _renderInputDescription(content *strings.Builder, description string, width int) {
+	if description == "" {
+		return
+	}
+	content.WriteString("\n")
+	content.WriteString(ui.SubtitleStyle.Render("Description:"))
+	content.WriteString("\n")
+	wrapped := _wordWrap(description, width-8)
+	content.WriteString(ui.NormalStyle.Render(wrapped))
+	content.WriteString("\n")
+}
+
+func _renderInputValues(content *strings.Builder, current, defaultVal string) {
+	content.WriteString("\n")
+	content.WriteString(ui.SubtitleStyle.Render("Current: "))
+	content.WriteString(ui.RenderEmptyValue(current))
+
+	content.WriteString("\n")
+	content.WriteString(ui.SubtitleStyle.Render("Default: "))
+	content.WriteString(ui.RenderEmptyValue(defaultVal))
 }
 
 func _wordWrap(text string, width int) string {
@@ -948,11 +840,7 @@ func (m Model) viewHistoryConfigPane(width, height int) string {
 			content.WriteString("  ")
 			content.WriteString(ui.NormalStyle.Render(k))
 			content.WriteString(": ")
-			if v == "" {
-				content.WriteString(ui.TableItalicStyle.Render(`("")`))
-			} else {
-				content.WriteString(ui.NormalStyle.Render(v))
-			}
+			content.WriteString(ui.RenderEmptyValue(v))
 			content.WriteString("\n")
 		}
 	}
@@ -1055,44 +943,24 @@ func (m Model) renderTableRows(height int) string {
 		input := wfInputs[name]
 		val := m.inputs[name]
 
-		numStr := " "
-		displayIdx := i + 1
-		if displayIdx <= 9 {
-			numStr = string(rune('0' + displayIdx))
-		} else if displayIdx == 10 {
-			numStr = "0"
-		}
+		numStr := _formatRowNumber(i)
 
 		reqStr := " "
 		if input.Required {
 			reqStr = "x"
 		}
 
-		valueDisplay := val
-		isSpecialValue := false
-		if val == "" {
-			valueDisplay = `("")`
-			isSpecialValue = true
-		}
+		valueDisplay := ui.FormatEmptyValue(val)
+		isSpecialValue := val == ""
 
-		defaultDisplay := input.Default
-		if defaultDisplay == "" {
-			defaultDisplay = `("")`
-		}
+		defaultDisplay := ui.FormatEmptyValue(input.Default)
 
 		isSelected := i == m.selectedInput
 		isDimmed := val == input.Default
 
-		displayName := name
-		if len(displayName) > 15 {
-			displayName = displayName[:12] + "..."
-		}
-		if len(valueDisplay) > 17 {
-			valueDisplay = valueDisplay[:14] + "..."
-		}
-		if len(defaultDisplay) > 15 {
-			defaultDisplay = defaultDisplay[:12] + "..."
-		}
+		displayName := ui.TruncateWithEllipsis(name, 15)
+		valueDisplay = ui.TruncateWithEllipsis(valueDisplay, 17)
+		defaultDisplay = ui.TruncateWithEllipsis(defaultDisplay, 15)
 
 		indicator := "  "
 		if isSelected {
@@ -1121,17 +989,7 @@ func (m Model) renderTableRows(height int) string {
 
 	if scrollOffset > 0 || visibleEnd < len(m.filteredInputs) {
 		rows.WriteString("\n")
-		scrollInfo := ""
-		if scrollOffset > 0 {
-			scrollInfo += "^"
-		} else {
-			scrollInfo += " "
-		}
-		scrollInfo += " "
-		if visibleEnd < len(m.filteredInputs) {
-			scrollInfo += "v"
-		}
-		rows.WriteString(ui.SubtitleStyle.Render(scrollInfo))
+		rows.WriteString(ui.RenderScrollIndicator(visibleEnd < len(m.filteredInputs), scrollOffset > 0))
 	}
 
 	return rows.String()
@@ -1142,6 +1000,17 @@ func _padRight(s string, length int) string {
 		return s
 	}
 	return s + strings.Repeat(" ", length-len(s))
+}
+
+func _formatRowNumber(index int) string {
+	displayIdx := index + 1
+	if displayIdx <= 9 {
+		return string(rune('0' + displayIdx))
+	}
+	if displayIdx == 10 {
+		return "0"
+	}
+	return " "
 }
 
 func _contains(slice []string, item string) bool {

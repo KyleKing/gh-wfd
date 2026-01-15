@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kyleking/gh-wfd/internal/ui/theme"
+	"github.com/sahilm/fuzzy"
 )
 
 var currentTheme theme.Theme
@@ -110,4 +112,82 @@ func PaneStyle(width, height int, focused bool) lipgloss.Style {
 		style = FocusedBorderStyle
 	}
 	return style.Width(width - 2).Height(height - 2)
+}
+
+// FormatEmptyValue returns the display string for a value, showing ("") for empty strings.
+func FormatEmptyValue(val string) string {
+	if val == "" {
+		return `("")`
+	}
+	return val
+}
+
+// RenderEmptyValue returns a styled string for a value, using italic style for empty strings.
+func RenderEmptyValue(val string) string {
+	if val == "" {
+		return TableItalicStyle.Render(`("")`)
+	}
+	return NormalStyle.Render(val)
+}
+
+// ApplyFuzzyFilter returns items filtered by query using fuzzy matching.
+// Returns original items if query is empty.
+func ApplyFuzzyFilter(query string, items []string) []string {
+	if query == "" {
+		return items
+	}
+	matches := fuzzy.Find(query, items)
+	results := make([]string, len(matches))
+	for i, match := range matches {
+		results[i] = match.Str
+	}
+	return results
+}
+
+// RemoveListBackgrounds removes all backgrounds from a list.Model for modal overlay.
+func RemoveListBackgrounds(l list.Model) list.Model {
+	l.Styles.Title = l.Styles.Title.UnsetBackground()
+	l.Styles.HelpStyle = l.Styles.HelpStyle.UnsetBackground()
+	l.Styles.TitleBar = l.Styles.TitleBar.UnsetBackground()
+	l.Styles.Spinner = l.Styles.Spinner.UnsetBackground()
+	l.Styles.FilterPrompt = l.Styles.FilterPrompt.UnsetBackground()
+	l.Styles.FilterCursor = l.Styles.FilterCursor.UnsetBackground()
+	l.Styles.DefaultFilterCharacterMatch = l.Styles.DefaultFilterCharacterMatch.UnsetBackground()
+	l.Styles.StatusBar = l.Styles.StatusBar.UnsetBackground()
+	l.Styles.StatusEmpty = l.Styles.StatusEmpty.UnsetBackground()
+	l.Styles.StatusBarActiveFilter = l.Styles.StatusBarActiveFilter.UnsetBackground()
+	l.Styles.StatusBarFilterCount = l.Styles.StatusBarFilterCount.UnsetBackground()
+	l.Styles.NoItems = l.Styles.NoItems.UnsetBackground()
+	l.Styles.PaginationStyle = l.Styles.PaginationStyle.UnsetBackground()
+	l.Styles.ActivePaginationDot = l.Styles.ActivePaginationDot.UnsetBackground()
+	l.Styles.InactivePaginationDot = l.Styles.InactivePaginationDot.UnsetBackground()
+	l.Styles.ArabicPagination = l.Styles.ArabicPagination.UnsetBackground()
+	l.Styles.DividerDot = l.Styles.DividerDot.UnsetBackground()
+	return l
+}
+
+// TruncateWithEllipsis truncates a string to maxLen, adding "..." if truncated.
+func TruncateWithEllipsis(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen <= 3 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-3] + "..."
+}
+
+// RenderScrollIndicator renders scroll arrows (^ and v) for lists.
+func RenderScrollIndicator(hasMore, hasLess bool) string {
+	indicator := ""
+	if hasLess {
+		indicator += "^"
+	} else {
+		indicator += " "
+	}
+	indicator += " "
+	if hasMore {
+		indicator += "v"
+	}
+	return SubtitleStyle.Render(indicator)
 }

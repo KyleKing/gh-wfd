@@ -136,10 +136,7 @@ func (m *InputModal) View() string {
 	s.WriteString(m.input.View())
 	s.WriteString("\n\n")
 
-	defaultDisplay := m.defaultVal
-	if defaultDisplay == "" {
-		defaultDisplay = `("")`
-	}
+	defaultDisplay := ui.FormatEmptyValue(m.defaultVal)
 	s.WriteString(ui.SubtitleStyle.Render("Default: " + defaultDisplay))
 	s.WriteString("\n")
 

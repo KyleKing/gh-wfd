@@ -7,7 +7,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kyleking/gh-wfd/internal/ui"
-	"github.com/sahilm/fuzzy"
 )
 
 // SimpleBranchModal is a branch selector without bubbles/list complexity.
@@ -160,12 +159,7 @@ func (m *SimpleBranchModal) applyFilter() {
 	}
 
 	// Use unpinned branches for filtering
-	matches := fuzzy.Find(query, m.allBranches)
-	m.filteredBranches = make([]string, len(matches))
-	for i, match := range matches {
-		m.filteredBranches[i] = match.Str
-	}
-
+	m.filteredBranches = ui.ApplyFuzzyFilter(query, m.allBranches)
 	if len(m.filteredBranches) == 0 {
 		m.filteredBranches = []string{}
 	}

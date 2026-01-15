@@ -8,7 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kyleking/gh-wfd/internal/ui"
 	"github.com/kyleking/gh-wfd/internal/workflow"
-	"github.com/sahilm/fuzzy"
 )
 
 // ConfigModel manages the configuration pane.
@@ -101,15 +100,7 @@ func (m *ConfigModel) SetFocused(focused bool) {
 // SetFilter applies a fuzzy filter to the inputs.
 func (m *ConfigModel) SetFilter(filter string) {
 	m.filterText = filter
-	if filter == "" {
-		m.filteredOrder = m.inputOrder
-	} else {
-		matches := fuzzy.Find(filter, m.inputOrder)
-		m.filteredOrder = make([]string, len(matches))
-		for i, match := range matches {
-			m.filteredOrder[i] = match.Str
-		}
-	}
+	m.filteredOrder = ui.ApplyFuzzyFilter(filter, m.inputOrder)
 	if m.selectedRow >= len(m.filteredOrder) {
 		m.selectedRow = len(m.filteredOrder) - 1
 	}
@@ -296,31 +287,17 @@ func (m ConfigModel) renderTableRows() string {
 			reqStr = "x"
 		}
 
-		valueDisplay := val
-		isSpecialValue := false
-		if val == "" {
-			valueDisplay = `("")`
-			isSpecialValue = true
-		}
+		valueDisplay := ui.FormatEmptyValue(val)
+		isSpecialValue := val == ""
 
-		defaultDisplay := input.Default
-		if defaultDisplay == "" {
-			defaultDisplay = `("")`
-		}
+		defaultDisplay := ui.FormatEmptyValue(input.Default)
 
 		isSelected := i == m.selectedRow
 		isDimmed := val == input.Default
 
-		displayName := name
-		if len(displayName) > 15 {
-			displayName = displayName[:12] + "..."
-		}
-		if len(valueDisplay) > 18 {
-			valueDisplay = valueDisplay[:15] + "..."
-		}
-		if len(defaultDisplay) > 15 {
-			defaultDisplay = defaultDisplay[:12] + "..."
-		}
+		displayName := ui.TruncateWithEllipsis(name, 15)
+		valueDisplay = ui.TruncateWithEllipsis(valueDisplay, 18)
+		defaultDisplay = ui.TruncateWithEllipsis(defaultDisplay, 15)
 
 		indicator := "  "
 		if isSelected {
@@ -347,17 +324,7 @@ func (m ConfigModel) renderTableRows() string {
 
 	if m.scrollOffset > 0 || visibleEnd < len(m.filteredOrder) {
 		rows.WriteString("\n")
-		scrollInfo := ""
-		if m.scrollOffset > 0 {
-			scrollInfo += "^"
-		} else {
-			scrollInfo += " "
-		}
-		scrollInfo += " "
-		if visibleEnd < len(m.filteredOrder) {
-			scrollInfo += "v"
-		}
-		rows.WriteString(ui.SubtitleStyle.Render(scrollInfo))
+		rows.WriteString(ui.RenderScrollIndicator(visibleEnd < len(m.filteredOrder), m.scrollOffset > 0))
 	}
 
 	return rows.String()

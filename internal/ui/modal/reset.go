@@ -87,14 +87,8 @@ func (m *ResetModal) View() string {
 	s.WriteString("\n\n")
 
 	for _, d := range m.diffs {
-		currentDisplay := d.Current
-		if currentDisplay == "" {
-			currentDisplay = `("")`
-		}
-		defaultDisplay := d.Default
-		if defaultDisplay == "" {
-			defaultDisplay = `("")`
-		}
+		currentDisplay := ui.FormatEmptyValue(d.Current)
+		defaultDisplay := ui.FormatEmptyValue(d.Default)
 
 		s.WriteString(ui.NormalStyle.Render("  " + d.Name + ":"))
 		s.WriteString("\n")

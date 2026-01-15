@@ -71,26 +71,8 @@ func NewBranchModalWithDefault(title string, branches []string, current string, 
 	l.Title = title
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(true)
-	l.Styles.Title = ui.TitleStyle.UnsetBackground()
-	l.Styles.HelpStyle = ui.HelpStyle.UnsetBackground()
 	l.SetFilteringEnabled(true)
-
-	// Remove all backgrounds from list styles to work with modal overlay
-	l.Styles.TitleBar = l.Styles.TitleBar.UnsetBackground()
-	l.Styles.Spinner = l.Styles.Spinner.UnsetBackground()
-	l.Styles.FilterPrompt = l.Styles.FilterPrompt.UnsetBackground()
-	l.Styles.FilterCursor = l.Styles.FilterCursor.UnsetBackground()
-	l.Styles.DefaultFilterCharacterMatch = l.Styles.DefaultFilterCharacterMatch.UnsetBackground()
-	l.Styles.StatusBar = l.Styles.StatusBar.UnsetBackground()
-	l.Styles.StatusEmpty = l.Styles.StatusEmpty.UnsetBackground()
-	l.Styles.StatusBarActiveFilter = l.Styles.StatusBarActiveFilter.UnsetBackground()
-	l.Styles.StatusBarFilterCount = l.Styles.StatusBarFilterCount.UnsetBackground()
-	l.Styles.NoItems = l.Styles.NoItems.UnsetBackground()
-	l.Styles.PaginationStyle = l.Styles.PaginationStyle.UnsetBackground()
-	l.Styles.ActivePaginationDot = l.Styles.ActivePaginationDot.UnsetBackground()
-	l.Styles.InactivePaginationDot = l.Styles.InactivePaginationDot.UnsetBackground()
-	l.Styles.ArabicPagination = l.Styles.ArabicPagination.UnsetBackground()
-	l.Styles.DividerDot = l.Styles.DividerDot.UnsetBackground()
+	l = ui.RemoveListBackgrounds(l)
 
 	if selectedIdx < len(items) {
 		l.Select(selectedIdx)
