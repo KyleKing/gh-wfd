@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -20,6 +21,7 @@ type WatchedRun struct {
 	Jobs       []JobStatus
 	HTMLURL    string
 	UpdatedAt  time.Time
+	LastError  error
 }
 
 // JobStatus represents the status of a job in a watched run.
@@ -57,19 +59,19 @@ type RunUpdate struct {
 
 // RunWatcher monitors workflow runs and sends updates.
 type RunWatcher struct {
-	client     *github.Client
-	runs       map[int64]*WatchedRun
-	updates    chan RunUpdate
-	mu         sync.RWMutex
-	ctx        context.Context
-	cancel     context.CancelFunc
-	ticker     *time.Ticker
-	isPolling  bool
-	pollingMu  sync.Mutex
+	client    GitHubClient
+	runs      map[int64]*WatchedRun
+	updates   chan RunUpdate
+	mu        sync.RWMutex
+	ctx       context.Context
+	cancel    context.CancelFunc
+	ticker    *time.Ticker
+	isPolling bool
+	pollingMu sync.Mutex
 }
 
 // NewWatcher creates a new RunWatcher.
-func NewWatcher(client *github.Client) *RunWatcher {
+func NewWatcher(client GitHubClient) *RunWatcher {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &RunWatcher{
 		client:  client,
@@ -214,12 +216,22 @@ func (w *RunWatcher) pollAllRuns() {
 func (w *RunWatcher) pollRun(runID int64) {
 	run, err := w.client.GetWorkflowRun(runID)
 	if err != nil {
+		w.mu.Lock()
+		if watched, ok := w.runs[runID]; ok {
+			watched.LastError = err
+		}
+		w.mu.Unlock()
 		w.sendUpdate(RunUpdate{RunID: runID, Error: err})
 		return
 	}
 
 	jobs, err := w.client.GetWorkflowRunJobs(runID)
 	if err != nil {
+		w.mu.Lock()
+		if watched, ok := w.runs[runID]; ok {
+			watched.LastError = err
+		}
+		w.mu.Unlock()
 		w.sendUpdate(RunUpdate{RunID: runID, Error: err})
 		return
 	}
@@ -262,5 +274,6 @@ func (w *RunWatcher) sendUpdate(update RunUpdate) {
 	select {
 	case w.updates <- update:
 	default:
+		log.Printf("warning: watcher update channel full, update dropped for run %d", update.RunID)
 	}
 }

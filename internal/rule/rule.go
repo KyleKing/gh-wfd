@@ -114,15 +114,15 @@ func ParseValidationComments(comments []string) ([]ValidationRule, error) {
 // ValidateValue validates a value against a set of rules.
 // Returns a slice of error messages for any failed validations.
 func ValidateValue(value string, rules []ValidationRule) []string {
-	var errors []string
+	var validationErrs []string
 
 	for _, r := range rules {
-		if err := validateRule(value, r); err != "" {
-			errors = append(errors, err)
+		if errMsg := validateRule(value, r); errMsg != "" {
+			validationErrs = append(validationErrs, errMsg)
 		}
 	}
 
-	return errors
+	return validationErrs
 }
 
 func validateRule(value string, r ValidationRule) string {

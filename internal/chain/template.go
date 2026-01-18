@@ -50,7 +50,7 @@ func Interpolate(template string, ctx *InterpolationContext) (string, error) {
 		case "steps":
 			if ctx.Steps != nil && len(parts) >= 4 && parts[2] == "inputs" {
 				var stepNum int
-				if _, err := parseStepIndex(parts[1], &stepNum); err == nil {
+				if parseStepIndex(parts[1], &stepNum) {
 					if step, ok := ctx.Steps[stepNum]; ok {
 						key := strings.Join(parts[3:], ".")
 						if val, ok := step.Inputs[key]; ok {
@@ -67,19 +67,19 @@ func Interpolate(template string, ctx *InterpolationContext) (string, error) {
 	return result, nil
 }
 
-func parseStepIndex(s string, n *int) (bool, error) {
+func parseStepIndex(s string, n *int) bool {
 	if len(s) == 0 {
-		return false, nil
+		return false
 	}
 	num := 0
 	for _, c := range s {
 		if c < '0' || c > '9' {
-			return false, nil
+			return false
 		}
 		num = num*10 + int(c-'0')
 	}
 	*n = num
-	return true, nil
+	return true
 }
 
 // InterpolateInputs interpolates all values in an input map.

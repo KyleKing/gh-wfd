@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/api"
@@ -85,7 +86,7 @@ func (c *Client) GetWorkflowRunJobs(runID int64) ([]Job, error) {
 func (c *Client) GetLatestRun(workflowName string) (*WorkflowRun, error) {
 	path := fmt.Sprintf("repos/%s/%s/actions/runs?per_page=1", c.owner, c.repo)
 	if workflowName != "" {
-		path += "&workflow=" + workflowName
+		path += "&workflow=" + url.QueryEscape(workflowName)
 	}
 
 	resp, err := c.rest.Request("GET", path, nil)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"gopkg.in/yaml.v3"
 )
@@ -110,6 +111,7 @@ func (c *WfdConfig) ChainNames() []string {
 	for name := range c.Chains {
 		names = append(names, name)
 	}
+	sort.Strings(names)
 	return names
 }
 

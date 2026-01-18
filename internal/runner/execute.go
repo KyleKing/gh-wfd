@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/kyleking/lazydispatch/internal/github"
 )
 
 // RunConfig holds the configuration for running a workflow.
@@ -94,7 +92,7 @@ func DryRun(cfg RunConfig) string {
 
 // ExecuteAndGetRunID runs the workflow and returns the run ID for watching.
 // This polls the API shortly after dispatch to find the triggered run.
-func ExecuteAndGetRunID(cfg RunConfig, client *github.Client) (int64, error) {
+func ExecuteAndGetRunID(cfg RunConfig, client GitHubClient) (int64, error) {
 	args := BuildArgs(cfg)
 
 	fmt.Println()

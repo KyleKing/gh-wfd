@@ -115,14 +115,20 @@ func (m *LiveViewModal) View() string {
 		}
 		s.WriteString("\n")
 
-		if i == m.selected && len(run.Jobs) > 0 {
-			for _, job := range run.Jobs {
-				jobIcon := runStatusIcon(job.Status, job.Conclusion)
-				s.WriteString(fmt.Sprintf("    %s %s\n", jobIcon, job.Name))
+		if i == m.selected {
+			if run.LastError != nil {
+				s.WriteString(ui.SelectedStyle.Render(fmt.Sprintf("    ! Error: %s\n", run.LastError.Error())))
+			}
 
-				for _, step := range job.Steps {
-					stepIcon := runStatusIcon(step.Status, step.Conclusion)
-					s.WriteString(fmt.Sprintf("      %s %s\n", stepIcon, step.Name))
+			if len(run.Jobs) > 0 {
+				for _, job := range run.Jobs {
+					jobIcon := runStatusIcon(job.Status, job.Conclusion)
+					s.WriteString(fmt.Sprintf("    %s %s\n", jobIcon, job.Name))
+
+					for _, step := range job.Steps {
+						stepIcon := runStatusIcon(step.Status, step.Conclusion)
+						s.WriteString(fmt.Sprintf("      %s %s\n", stepIcon, step.Name))
+					}
 				}
 			}
 		}

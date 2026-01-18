@@ -2,6 +2,7 @@ package chain
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -59,8 +60,8 @@ type ChainUpdate struct {
 
 // ChainExecutor manages the execution of a workflow chain.
 type ChainExecutor struct {
-	client        *github.Client
-	watcher       *watcher.RunWatcher
+	client        GitHubClient
+	watcher       RunWatcher
 	chain         *config.Chain
 	chainName     string
 	state         *ChainState
@@ -72,7 +73,7 @@ type ChainExecutor struct {
 }
 
 // NewExecutor creates a new chain executor.
-func NewExecutor(client *github.Client, w *watcher.RunWatcher, chainName string, chain *config.Chain) *ChainExecutor {
+func NewExecutor(client GitHubClient, w RunWatcher, chainName string, chain *config.Chain) *ChainExecutor {
 	stepStatuses := make([]StepStatus, len(chain.Steps))
 	for i := range stepStatuses {
 		stepStatuses[i] = StepPending
@@ -229,7 +230,7 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 }
 
 func (e *ChainExecutor) waitForRun(runID int64, waitFor config.WaitCondition) (string, error) {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(watcher.PollInterval)
 	defer ticker.Stop()
 
 	for {
@@ -239,7 +240,7 @@ func (e *ChainExecutor) waitForRun(runID int64, waitFor config.WaitCondition) (s
 		case <-ticker.C:
 			run, err := e.client.GetWorkflowRun(runID)
 			if err != nil {
-				continue
+				return "", fmt.Errorf("failed to poll run %d: %w", runID, err)
 			}
 
 			if run.Status == github.StatusCompleted {
@@ -287,5 +288,6 @@ func (e *ChainExecutor) sendUpdate() {
 	select {
 	case e.updates <- ChainUpdate{State: state}:
 	default:
+		log.Printf("warning: chain update channel full, update dropped for step %d", state.CurrentStep)
 	}
 }

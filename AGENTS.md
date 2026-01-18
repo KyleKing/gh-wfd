@@ -140,3 +140,33 @@ func TestAdd(t *testing.T) {
 
 - Do not stage, commit, or push without explicit instruction
 - Use conventional commits (commitizen enforced)
+
+## Bubbletea Patterns
+
+### Channel Communication
+
+- Use buffered channels for async updates (buffer size: 10-100)
+- Never silently drop messages - log warnings and surface errors
+- Prefer `select` with `default` only when loss is acceptable AND logged
+
+### Error Surfacing
+
+- Errors from async operations must reach the UI
+- Use `RunUpdate.Error` pattern for watcher errors
+- Display actionable error messages with resolution hints
+
+### Message Types
+
+- Define specific Msg types for each async operation
+- Pattern: `type XxxResultMsg struct { Value T; Err error }`
+
+## Constants
+
+- Define numeric constants for magic numbers
+- Use shared constants across packages (e.g., `watcher.PollInterval`)
+
+## Interface Design
+
+- Define interfaces where consumed, not where implemented
+- Keep interfaces small (1-3 methods)
+- Use interfaces to enable testing with mocks
