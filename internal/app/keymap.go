@@ -6,6 +6,8 @@ import "github.com/charmbracelet/bubbles/key"
 type KeyMap struct {
 	Branch   key.Binding
 	Chain    key.Binding
+	Clear    key.Binding
+	ClearAll key.Binding
 	Copy     key.Binding
 	Down     key.Binding
 	Edit     key.Binding
@@ -19,6 +21,8 @@ type KeyMap struct {
 	ShiftTab key.Binding
 	Space    key.Binding
 	Tab      key.Binding
+	TabNext  key.Binding
+	TabPrev  key.Binding
 	Up       key.Binding
 	Watch    key.Binding
 
@@ -60,6 +64,8 @@ func DefaultKeyMap() KeyMap {
 	return KeyMap{
 		Branch:   key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "branch")),
 		Chain:    key.NewBinding(key.WithKeys("C"), key.WithHelp("C", "run chain")),
+		Clear:    key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "clear run")),
+		ClearAll: key.NewBinding(key.WithKeys("D"), key.WithHelp("D", "clear all")),
 		Copy:     key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy to clipboard")),
 		Down:     key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "down")),
 		Edit:     key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit")),
@@ -73,6 +79,8 @@ func DefaultKeyMap() KeyMap {
 		ShiftTab: key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "prev pane")),
 		Space:    key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "select")),
 		Tab:      key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "next pane")),
+		TabNext:  key.NewBinding(key.WithKeys("l", "right"), key.WithHelp("l", "next tab")),
+		TabPrev:  key.NewBinding(key.WithKeys("h", "left"), key.WithHelp("h", "prev tab")),
 		Up:       key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/k", "up")),
 		Watch:    key.NewBinding(key.WithKeys("w"), key.WithHelp("w", "watch")),
 
@@ -125,6 +133,7 @@ func (k KeyMap) ShortHelp() []key.Binding {
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Tab, k.ShiftTab, k.Up, k.Down},
+		{k.TabNext, k.TabPrev, k.Clear, k.ClearAll},
 		{k.Enter, k.Edit, k.Escape, k.Branch},
 		{k.Watch, k.Filter, k.Copy, k.Reset},
 		{k.Input1, k.Input2, k.Input3, k.Input0},

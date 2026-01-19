@@ -9,11 +9,13 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kyleking/gh-lazydispatch/internal/chain"
+	"github.com/kyleking/gh-lazydispatch/internal/config"
 	"github.com/kyleking/gh-lazydispatch/internal/git"
 	"github.com/kyleking/gh-lazydispatch/internal/rule"
 	"github.com/kyleking/gh-lazydispatch/internal/runner"
 	"github.com/kyleking/gh-lazydispatch/internal/ui"
 	"github.com/kyleking/gh-lazydispatch/internal/ui/modal"
+	"github.com/kyleking/gh-lazydispatch/internal/ui/panes"
 	"github.com/kyleking/gh-lazydispatch/internal/validation"
 	"github.com/kyleking/gh-lazydispatch/internal/workflow"
 )
@@ -93,6 +95,42 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case key.Matches(msg, m.keys.TabNext):
+		if m.focused == PaneHistory {
+			m.rightPanel.NextTab()
+			return m, nil
+		}
+		return m, nil
+
+	case key.Matches(msg, m.keys.TabPrev):
+		if m.focused == PaneHistory {
+			m.rightPanel.PrevTab()
+			return m, nil
+		}
+		return m, nil
+
+	case key.Matches(msg, m.keys.Clear):
+		if m.focused == PaneHistory && m.rightPanel.ActiveTab() == panes.TabLive {
+			if run, ok := m.rightPanel.SelectedRun(); ok {
+				if m.watcher != nil {
+					m.watcher.Unwatch(run.RunID)
+					m.rightPanel.SetRuns(m.watcher.GetRuns())
+				}
+			}
+			return m, nil
+		}
+		return m, nil
+
+	case key.Matches(msg, m.keys.ClearAll):
+		if m.focused == PaneHistory && m.rightPanel.ActiveTab() == panes.TabLive {
+			if m.watcher != nil {
+				m.watcher.ClearCompleted()
+				m.rightPanel.SetRuns(m.watcher.GetRuns())
+			}
+			return m, nil
+		}
+		return m, nil
+
 	case key.Matches(msg, m.keys.LiveView):
 		return m.openLiveViewModal()
 
@@ -154,8 +192,15 @@ func (m *Model) handleUp() {
 			}
 		}
 	case PaneHistory:
-		if m.selectedHistory > 0 {
-			m.selectedHistory--
+		switch m.rightPanel.ActiveTab() {
+		case panes.TabHistory:
+			if m.selectedHistory > 0 {
+				m.selectedHistory--
+			}
+		case panes.TabChains:
+			m.rightPanel.Chains().MoveUp()
+		case panes.TabLive:
+			m.rightPanel.Live().MoveUp()
 		}
 	case PaneConfig:
 		if m.selectedInput < 0 {
@@ -181,9 +226,16 @@ func (m *Model) handleDown() {
 			}
 		}
 	case PaneHistory:
-		entries := m.currentHistoryEntries()
-		if m.selectedHistory < len(entries)-1 {
-			m.selectedHistory++
+		switch m.rightPanel.ActiveTab() {
+		case panes.TabHistory:
+			entries := m.currentHistoryEntries()
+			if m.selectedHistory < len(entries)-1 {
+				m.selectedHistory++
+			}
+		case panes.TabChains:
+			m.rightPanel.Chains().MoveDown()
+		case panes.TabLive:
+			m.rightPanel.Live().MoveDown()
 		}
 	case PaneConfig:
 		if m.selectedInput < 0 {
@@ -202,27 +254,50 @@ func (m *Model) handleDown() {
 func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	switch m.focused {
 	case PaneHistory:
-		entries := m.currentHistoryEntries()
-		if m.selectedHistory < len(entries) {
-			entry := entries[m.selectedHistory]
-			if m.viewMode == HistoryPreviewMode {
-				m.branch = entry.Branch
-				m.inputs = make(map[string]string)
-				for k, v := range entry.Inputs {
-					m.inputs[k] = v
+		switch m.rightPanel.ActiveTab() {
+		case panes.TabHistory:
+			entries := m.currentHistoryEntries()
+			if m.selectedHistory < len(entries) {
+				entry := entries[m.selectedHistory]
+				if m.viewMode == HistoryPreviewMode {
+					m.branch = entry.Branch
+					m.inputs = make(map[string]string)
+					for k, v := range entry.Inputs {
+						m.inputs[k] = v
+					}
+					m.viewMode = WorkflowListMode
+					m.previewingHistoryEntry = nil
+					return m.executeWorkflow()
 				}
-				m.viewMode = WorkflowListMode
-				m.previewingHistoryEntry = nil
-				return m.executeWorkflow()
-			} else {
 				m.viewMode = HistoryPreviewMode
 				m.previewingHistoryEntry = &entry
+			}
+		case panes.TabChains:
+			if name, chainDef, ok := m.rightPanel.SelectedChain(); ok {
+				return m.executeChain(name, chainDef)
 			}
 		}
 	case PaneConfig:
 		return m.executeWorkflow()
 	}
 	return m, nil
+}
+
+func (m Model) executeChain(name string, chainDef config.Chain) (tea.Model, tea.Cmd) {
+	if m.ghClient == nil || m.watcher == nil {
+		return m, nil
+	}
+
+	executor := chain.NewExecutor(m.ghClient, m.watcher, name, &chainDef)
+	m.chainExecutor = executor
+
+	if err := executor.Start(m.inputs, m.branch); err != nil {
+		return m, nil
+	}
+
+	m.modalStack.Push(modal.NewChainStatusModal(executor.State()))
+
+	return m, m.chainSubscription()
 }
 
 func (m Model) executeWorkflow() (tea.Model, tea.Cmd) {

@@ -1,11 +1,12 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/kyleking/gh-lazydispatch/internal/chain"
 	"github.com/kyleking/gh-lazydispatch/internal/ui"
-	"github.com/kyleking/gh-lazydispatch/internal/ui/modal"
 	"github.com/kyleking/gh-lazydispatch/internal/validation"
 	"github.com/kyleking/gh-lazydispatch/internal/workflow"
 )
@@ -16,17 +17,13 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	statusBar := m.viewStatusBar()
-	statusHeight := 0
-	if statusBar != "" {
-		statusHeight = 1
-	}
+	statusBar := m.viewTopStatusBar()
+	statusHeight := 1
 
 	topHeight := (m.height - statusHeight) / 2
 	bottomHeight := m.height - statusHeight - topHeight
 
 	leftWidth := (m.width * 11) / 30
-	rightWidth := m.width - leftWidth
 
 	var leftPane string
 	switch m.viewMode {
@@ -41,16 +38,13 @@ func (m Model) View() string {
 	default:
 		leftPane = m.viewWorkflowPane(leftWidth, topHeight)
 	}
-	historyPane := m.viewHistoryPane(rightWidth, topHeight)
+
+	m.rightPanel.SetFocused(m.focused == PaneHistory)
+	rightPane := m.rightPanel.View()
 	configPane := m.viewConfigPane(m.width, bottomHeight)
 
-	top := lipgloss.JoinHorizontal(lipgloss.Top, leftPane, historyPane)
-	var main string
-	if statusBar != "" {
-		main = lipgloss.JoinVertical(lipgloss.Left, top, configPane, statusBar)
-	} else {
-		main = lipgloss.JoinVertical(lipgloss.Left, top, configPane)
-	}
+	top := lipgloss.JoinHorizontal(lipgloss.Top, leftPane, rightPane)
+	main := lipgloss.JoinVertical(lipgloss.Left, statusBar, top, configPane)
 
 	if m.modalStack.HasActive() {
 		return m.modalStack.Render(main)
@@ -59,15 +53,44 @@ func (m Model) View() string {
 	return main
 }
 
-func (m Model) viewStatusBar() string {
-	if m.watcher == nil {
-		return ""
+func (m Model) viewTopStatusBar() string {
+	var parts []string
+
+	if m.wfdConfig != nil && len(m.wfdConfig.Chains) > 0 {
+		parts = append(parts, fmt.Sprintf("Chains(%d)", len(m.wfdConfig.Chains)))
 	}
-	runs := m.watcher.GetRuns()
-	if len(runs) == 0 {
-		return ""
+
+	if m.watcher != nil {
+		runs := m.watcher.GetRuns()
+		if len(runs) > 0 {
+			active := m.rightPanel.Live().ActiveCount()
+			if active > 0 {
+				parts = append(parts, fmt.Sprintf("Live(%d*)", len(runs)))
+			} else {
+				parts = append(parts, fmt.Sprintf("Live(%d)", len(runs)))
+			}
+		}
 	}
-	return ui.HelpStyle.Render(modal.FormatStatusBar(runs) + " [l] view")
+
+	if m.chainExecutor != nil {
+		state := m.chainExecutor.State()
+		if state.Status == chain.ChainRunning {
+			parts = append(parts, fmt.Sprintf("Chain: %s (%d/%d)",
+				state.ChainName,
+				state.CurrentStep+1,
+				len(state.StepStatuses)))
+		}
+	}
+
+	left := strings.Join(parts, "  ")
+	right := "lazydispatch"
+
+	padding := m.width - len(left) - len(right) - 2
+	if padding < 1 {
+		padding = 1
+	}
+
+	return ui.HelpStyle.Render(" " + left + strings.Repeat(" ", padding) + right + " ")
 }
 
 func (m Model) viewInputDetailsPane(width, height int) string {
@@ -86,7 +109,7 @@ func (m Model) viewInputDetailsPane(width, height int) string {
 	}
 
 	var content strings.Builder
-	content.WriteString(ui.TitleStyle.Render("Input Details"))
+	content.WriteString(ui.TitleStyle.Render(m.leftPaneTitle()))
 	content.WriteString("\n\n")
 
 	_renderInputHeader(&content, selectedName, input.Required)
@@ -152,10 +175,21 @@ func _renderInputValues(content *strings.Builder, current, defaultVal string) {
 	content.WriteString(ui.RenderEmptyValue(defaultVal))
 }
 
+func (m Model) leftPaneTitle() string {
+	switch m.viewMode {
+	case InputDetailMode:
+		return "Workflows > Input"
+	case HistoryPreviewMode:
+		return "Workflows > Preview"
+	default:
+		return "Workflows"
+	}
+}
+
 func (m Model) viewWorkflowPane(width, height int) string {
 	style := ui.PaneStyle(width, height, m.focused == PaneWorkflows)
 
-	title := ui.TitleStyle.Render("Workflows")
+	title := ui.TitleStyle.Render(m.leftPaneTitle())
 	maxLineWidth := width - 8
 	var content string
 
@@ -191,43 +225,11 @@ func (m Model) viewWorkflowPane(width, height int) string {
 	return style.Render(title + "\n" + content)
 }
 
-func (m Model) viewHistoryPane(width, height int) string {
-	style := ui.PaneStyle(width, height, m.focused == PaneHistory)
-
-	var workflowName string
-	if m.selectedWorkflow >= 0 && m.selectedWorkflow < len(m.workflows) {
-		workflowName = m.workflows[m.selectedWorkflow].Filename
-	} else {
-		workflowName = "all"
-	}
-	title := ui.TitleStyle.Render("Recent Runs (" + workflowName + ")")
-
-	entries := m.currentHistoryEntries()
-	var content string
-	if len(entries) == 0 {
-		content = ui.SubtitleStyle.Render("No history")
-	} else {
-		for i, e := range entries {
-			line := e.Branch
-			if i == m.selectedHistory {
-				content += ui.SelectedStyle.Render("> " + line)
-			} else {
-				content += ui.NormalStyle.Render("  " + line)
-			}
-			if i < len(entries)-1 {
-				content += "\n"
-			}
-		}
-	}
-
-	return style.Render(title + "\n" + content)
-}
-
 func (m Model) viewHistoryConfigPane(width, height int) string {
 	style := ui.PaneStyle(width, height, m.focused == PaneWorkflows)
 
 	var content strings.Builder
-	content.WriteString(ui.TitleStyle.Render("Run Configuration Preview"))
+	content.WriteString(ui.TitleStyle.Render(m.leftPaneTitle()))
 	content.WriteString("\n\n")
 
 	if m.previewingHistoryEntry == nil {

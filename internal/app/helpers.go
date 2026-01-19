@@ -40,6 +40,16 @@ func (m *Model) initializeInputs(wf workflow.WorkflowFile) {
 	m.selectedInput = -1
 	m.viewMode = WorkflowListMode
 	m.selectedHistory = 0
+	m.syncHistoryEntries()
+}
+
+func (m *Model) syncHistoryEntries() {
+	entries := m.currentHistoryEntries()
+	var workflowFilter string
+	if m.selectedWorkflow >= 0 && m.selectedWorkflow < len(m.workflows) {
+		workflowFilter = m.workflows[m.selectedWorkflow].Filename
+	}
+	m.rightPanel.SetHistoryEntries(entries, workflowFilter)
 }
 
 func (m Model) getSelectedInputName() string {

@@ -129,6 +129,11 @@ func (m HistoryModel) View() string {
 	return style.Render(m.list.View())
 }
 
+// ViewContent renders just the list content without the pane border.
+func (m HistoryModel) ViewContent() string {
+	return m.list.View()
+}
+
 // SelectedEntry returns the currently selected history entry.
 func (m HistoryModel) SelectedEntry() *frecency.HistoryEntry {
 	item := m.list.SelectedItem()

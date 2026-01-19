@@ -10,6 +10,7 @@ import (
 	"github.com/kyleking/gh-lazydispatch/internal/git"
 	"github.com/kyleking/gh-lazydispatch/internal/github"
 	"github.com/kyleking/gh-lazydispatch/internal/ui/modal"
+	"github.com/kyleking/gh-lazydispatch/internal/ui/panes"
 	"github.com/kyleking/gh-lazydispatch/internal/watcher"
 	"github.com/kyleking/gh-lazydispatch/internal/workflow"
 )
@@ -62,6 +63,8 @@ type Model struct {
 	wfdConfig     *config.WfdConfig
 	chainExecutor *chain.ChainExecutor
 
+	rightPanel panes.TabbedRightModel
+
 	width  int
 	height int
 	keys   KeyMap
@@ -93,6 +96,7 @@ func New(workflows []workflow.WorkflowFile, history *frecency.Store, repo string
 		keys:             DefaultKeyMap(),
 		selectedInput:    -1,
 		selectedWorkflow: -1,
+		rightPanel:       panes.NewTabbedRight(),
 	}
 
 	if ghClient, err := github.NewClient(repo); err == nil {
@@ -102,11 +106,14 @@ func New(workflows []workflow.WorkflowFile, history *frecency.Store, repo string
 
 	if cfg, err := config.Load("."); err == nil && cfg != nil {
 		m.wfdConfig = cfg
+		m.rightPanel.SetChains(cfg.Chains)
 	}
 
 	if len(workflows) > 0 {
 		m.selectedWorkflow = 0
 		m.initializeInputs(workflows[0])
+	} else {
+		m.syncHistoryEntries()
 	}
 
 	return m
@@ -128,6 +135,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.modalStack.SetSize(msg.Width, msg.Height)
+		leftWidth := (m.width * 11) / 30
+		rightWidth := m.width - leftWidth
+		topHeight := (m.height - 1) / 2
+		m.rightPanel.SetSize(rightWidth, topHeight)
 		return m, nil
 
 	case modal.SelectResultMsg:
@@ -167,6 +178,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case RunUpdateMsg:
+		if m.watcher != nil {
+			m.rightPanel.SetRuns(m.watcher.GetRuns())
+		}
 		return m, m.watcherSubscription()
 
 	case ChainUpdateMsg:
