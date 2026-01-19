@@ -32,7 +32,7 @@ func defaultSelectKeyMap() selectKeyMap {
 		Down:           key.NewBinding(key.WithKeys("down", "j")),
 		Enter:          key.NewBinding(key.WithKeys("enter")),
 		Escape:         key.NewBinding(key.WithKeys("esc")),
-		RestoreDefault: key.NewBinding(key.WithKeys("alt+d")),
+		RestoreDefault: key.NewBinding(key.WithKeys("ctrl+r", "alt+d")),
 		Up:             key.NewBinding(key.WithKeys("up", "k")),
 	}
 }
@@ -108,7 +108,7 @@ func (m *SelectModal) View() string {
 		}
 	}
 
-	s += "\n\n" + ui.HelpStyle.Render("[↑↓] navigate  [enter] select  [alt+d] default  [esc] cancel")
+	s += "\n\n" + ui.HelpStyle.Render("[↑↓] navigate  [enter] select  [ctrl+r] default  [esc] cancel")
 	return s
 }
 

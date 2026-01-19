@@ -60,12 +60,9 @@ func _padRight(s string, length int) string {
 }
 
 func _formatRowNumber(index int) string {
-	displayIdx := index + 1
+	displayIdx := index
 	if displayIdx <= 9 {
 		return string(rune('0' + displayIdx))
-	}
-	if displayIdx == 10 {
-		return "0"
 	}
 	return " "
 }

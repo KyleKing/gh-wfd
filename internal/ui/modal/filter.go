@@ -41,6 +41,13 @@ func NewFilterModal(title string, items []string, currentFilter string) *FilterM
 	ti.CharLimit = 64
 	ti.Width = 40
 
+	// Remove backgrounds from textinput styles to prevent visual artifacts in modal
+	ti.PromptStyle = ti.PromptStyle.UnsetBackground()
+	ti.TextStyle = ti.TextStyle.UnsetBackground()
+	ti.PlaceholderStyle = ti.PlaceholderStyle.UnsetBackground()
+	ti.CompletionStyle = ti.CompletionStyle.UnsetBackground()
+	ti.Cursor.Style = ti.Cursor.Style.UnsetBackground()
+
 	m := &FilterModal{
 		title: title,
 		input: ti,

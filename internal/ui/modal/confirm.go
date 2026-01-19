@@ -33,7 +33,7 @@ func defaultConfirmKeyMap() confirmKeyMap {
 		Escape:         key.NewBinding(key.WithKeys("esc")),
 		Left:           key.NewBinding(key.WithKeys("left", "h")),
 		No:             key.NewBinding(key.WithKeys("n")),
-		RestoreDefault: key.NewBinding(key.WithKeys("alt+d")),
+		RestoreDefault: key.NewBinding(key.WithKeys("ctrl+r", "alt+d")),
 		Right:          key.NewBinding(key.WithKeys("right", "l")),
 		Yes:            key.NewBinding(key.WithKeys("y")),
 	}
@@ -105,7 +105,7 @@ func (m *ConfirmModal) View() string {
 	}
 
 	s += "  " + yesStyle.Render("[ Yes ]") + "  " + noStyle.Render("[ No ]")
-	s += "\n\n" + ui.HelpStyle.Render("[←→] select  [y/n] quick  [alt+d] default  [enter] confirm  [esc] cancel")
+	s += "\n\n" + ui.HelpStyle.Render("[←→] select  [y/n] quick  [ctrl+r] default  [enter] confirm  [esc] cancel")
 	return s
 }
 

@@ -36,7 +36,7 @@ func defaultInputKeyMap() inputKeyMap {
 	return inputKeyMap{
 		Enter:          key.NewBinding(key.WithKeys("enter")),
 		Escape:         key.NewBinding(key.WithKeys("esc")),
-		RestoreDefault: key.NewBinding(key.WithKeys("alt+d")),
+		RestoreDefault: key.NewBinding(key.WithKeys("ctrl+r", "alt+d")),
 	}
 }
 
@@ -47,6 +47,13 @@ func NewInputModal(title, description, defaultVal, inputType, current string, op
 	ti.Focus()
 	ti.CharLimit = 256
 	ti.Width = 40
+
+	// Remove backgrounds from textinput styles to prevent visual artifacts in modal
+	ti.PromptStyle = ti.PromptStyle.UnsetBackground()
+	ti.TextStyle = ti.TextStyle.UnsetBackground()
+	ti.PlaceholderStyle = ti.PlaceholderStyle.UnsetBackground()
+	ti.CompletionStyle = ti.CompletionStyle.UnsetBackground()
+	ti.Cursor.Style = ti.Cursor.Style.UnsetBackground()
 
 	return &InputModal{
 		title:           title,
@@ -158,10 +165,10 @@ func (m *InputModal) View() string {
 		s.WriteString("\n")
 		s.WriteString(ui.SelectedStyle.Render("! " + m.validationErr))
 		s.WriteString("\n\n")
-		s.WriteString(ui.HelpStyle.Render("[enter] apply anyway  [esc] keep editing  [alt+d] restore default"))
+		s.WriteString(ui.HelpStyle.Render("[enter] apply anyway  [esc] keep editing  [ctrl+r] restore default"))
 	} else {
 		s.WriteString("\n")
-		s.WriteString(ui.HelpStyle.Render("[enter] confirm  [esc] cancel  [alt+d] restore default"))
+		s.WriteString(ui.HelpStyle.Render("[enter] confirm  [esc] cancel  [ctrl+r] restore default"))
 	}
 
 	return s.String()

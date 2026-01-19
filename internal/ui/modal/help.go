@@ -59,7 +59,7 @@ func (m *HelpModal) View() string {
   r                  Reset all inputs to defaults
 
 ` + ui.SubtitleStyle.Render("Input Editing") + `
-  Alt+D              Restore default value
+  Ctrl+R             Restore default value
   Enter              Confirm (or apply anyway)
   Esc                Cancel / Keep editing
 

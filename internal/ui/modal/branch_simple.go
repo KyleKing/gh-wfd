@@ -53,6 +53,13 @@ func NewSimpleBranchModal(title string, branches []string, current string, defau
 	ti.Placeholder = "Type to filter..."
 	ti.Prompt = "/ "
 
+	// Remove backgrounds from textinput styles to prevent visual artifacts in modal
+	ti.PromptStyle = ti.PromptStyle.UnsetBackground()
+	ti.TextStyle = ti.TextStyle.UnsetBackground()
+	ti.PlaceholderStyle = ti.PlaceholderStyle.UnsetBackground()
+	ti.CompletionStyle = ti.CompletionStyle.UnsetBackground()
+	ti.Cursor.Style = ti.Cursor.Style.UnsetBackground()
+
 	selected := 0
 	for i, branch := range pinnedBranches {
 		if branch == current {
