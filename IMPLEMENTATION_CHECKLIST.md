@@ -91,31 +91,31 @@ Track progress implementing the enhanced chains and log viewer system.
 
 ### Error Handling Enhancement (Optional for Phase 2)
 
-- [ ] Create `internal/errors/chain_errors.go`
-  - [ ] Define `StepExecutionError`
-  - [ ] Define `StepDispatchError`
-  - [ ] Define `InterpolationError`
+- [x] Create `internal/errors/chain_errors.go`
+  - [x] Define `StepExecutionError`
+  - [x] Define `StepDispatchError`
+  - [x] Define `InterpolationError`
 
-- [ ] Update `internal/chain/executor.go`
-  - [ ] Use structured errors in runStep()
-  - [ ] Include RunURL in errors
-  - [ ] Add suggestions to errors
+- [x] Update `internal/chain/executor.go`
+  - [x] Use structured errors in runStep()
+  - [x] Include RunURL in errors
+  - [x] Add suggestions to errors
 
-- [ ] Update `internal/ui/modal/chain_status.go`
-  - [ ] Add `GetFailedStepRunURL()` method
-  - [ ] Add `GetDetailedError()` method
-  - [ ] Update View() to show URLs
-  - [ ] Add 'o' key to open browser
+- [x] Update `internal/ui/modal/chain_status.go`
+  - [x] Add `GetFailedStepRunURL()` method
+  - [x] Add `GetDetailedError()` method
+  - [x] Update View() to show URLs
+  - [x] Add 'o' key to open browser
 
-- [ ] Add error styles to `internal/ui/styles.go`
-  - [ ] `ErrorTitleStyle`
-  - [ ] `ErrorStyle`
-  - [ ] `URLStyle`
+- [x] Add error styles to `internal/ui/styles.go`
+  - [x] `ErrorTitleStyle`
+  - [x] `ErrorStyle`
+  - [x] `URLStyle`
 
 ### Build & Test
 
 - [x] Build successfully: `go build`
-- [ ] Run: `./lazydispatch`
+- [x] Run: `./lazydispatch`
 - [ ] Test: Execute chain, press 'l' when complete
 - [ ] Verify: Modal opens with logs
 - [ ] Verify: Can collapse/expand sections

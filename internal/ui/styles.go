@@ -20,14 +20,19 @@ var (
 	SoftMutedColor lipgloss.Color
 	TextColor      lipgloss.Color
 	ModalBgColor   lipgloss.Color
+	ErrorColor     lipgloss.Color
+	LinkColor      lipgloss.Color
 )
 
 // Styles for the application (initialized in ApplyTheme).
 var (
 	BorderStyle        lipgloss.Style
 	CLIPreviewStyle    lipgloss.Style
+	ErrorStyle         lipgloss.Style
+	ErrorTitleStyle    lipgloss.Style
 	FocusedBorderStyle lipgloss.Style
 	HelpStyle          lipgloss.Style
+	LinkStyle          lipgloss.Style
 	NormalStyle        lipgloss.Style
 	SelectedStyle      lipgloss.Style
 	SubtitleStyle      lipgloss.Style
@@ -55,6 +60,8 @@ func ApplyTheme() {
 	SoftMutedColor = currentTheme.SoftMuted
 	TextColor = currentTheme.Text
 	ModalBgColor = currentTheme.ModalBg
+	ErrorColor = currentTheme.Error
+	LinkColor = currentTheme.Link
 
 	BorderStyle = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
@@ -64,12 +71,23 @@ func ApplyTheme() {
 		Foreground(MutedColor).
 		Italic(true)
 
+	ErrorStyle = lipgloss.NewStyle().
+		Foreground(ErrorColor)
+
+	ErrorTitleStyle = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(ErrorColor)
+
 	FocusedBorderStyle = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(PrimaryColor)
 
 	HelpStyle = lipgloss.NewStyle().
 		Foreground(SoftMutedColor)
+
+	LinkStyle = lipgloss.NewStyle().
+		Foreground(LinkColor).
+		Underline(true)
 
 	NormalStyle = lipgloss.NewStyle().
 		Foreground(TextColor)

@@ -7,7 +7,9 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/kyleking/gh-lazydispatch/internal/browser"
 	"github.com/kyleking/gh-lazydispatch/internal/chain"
+	chainerr "github.com/kyleking/gh-lazydispatch/internal/errors"
 	"github.com/kyleking/gh-lazydispatch/internal/ui"
 )
 
@@ -33,18 +35,20 @@ type ChainStatusModal struct {
 }
 
 type chainStatusKeyMap struct {
-	Close    key.Binding
-	Stop     key.Binding
-	Copy     key.Binding
-	ViewLogs key.Binding
+	Close       key.Binding
+	Stop        key.Binding
+	Copy        key.Binding
+	ViewLogs    key.Binding
+	OpenBrowser key.Binding
 }
 
 func defaultChainStatusKeyMap() chainStatusKeyMap {
 	return chainStatusKeyMap{
-		Close:    key.NewBinding(key.WithKeys("esc", "q")),
-		Stop:     key.NewBinding(key.WithKeys("ctrl+c")),
-		Copy:     key.NewBinding(key.WithKeys("c")),
-		ViewLogs: key.NewBinding(key.WithKeys("l")),
+		Close:       key.NewBinding(key.WithKeys("esc", "q")),
+		Stop:        key.NewBinding(key.WithKeys("ctrl+c")),
+		Copy:        key.NewBinding(key.WithKeys("c")),
+		ViewLogs:    key.NewBinding(key.WithKeys("l")),
+		OpenBrowser: key.NewBinding(key.WithKeys("o")),
 	}
 }
 
@@ -106,6 +110,10 @@ func (m *ChainStatusModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 						ErrorsOnly: errorsOnly,
 					}
 				}
+			}
+		case key.Matches(msg, m.keys.OpenBrowser):
+			if url := m.GetFailedStepRunURL(); url != "" {
+				browser.Open(url)
 			}
 		}
 	}
@@ -178,8 +186,22 @@ func (m *ChainStatusModal) View() string {
 
 	if m.state.Error != nil {
 		s.WriteString("\n")
-		s.WriteString(ui.SelectedStyle.Render(fmt.Sprintf("Error: %s", m.state.Error.Error())))
+		s.WriteString(ui.ErrorTitleStyle.Render("Error:"))
 		s.WriteString("\n")
+		s.WriteString(ui.ErrorStyle.Render("  " + m.state.Error.Error()))
+		s.WriteString("\n")
+
+		if url := chainerr.GetRunURL(m.state.Error); url != "" {
+			s.WriteString(ui.SubtitleStyle.Render("  Run: "))
+			s.WriteString(ui.LinkStyle.Render(url))
+			s.WriteString("\n")
+		}
+
+		if suggestion := chainerr.GetSuggestion(m.state.Error); suggestion != "" {
+			s.WriteString(ui.SubtitleStyle.Render("  Hint: "))
+			s.WriteString(ui.NormalStyle.Render(suggestion))
+			s.WriteString("\n")
+		}
 	}
 
 	s.WriteString("\n")
@@ -189,8 +211,11 @@ func (m *ChainStatusModal) View() string {
 		s.WriteString("\n\n")
 	}
 
+	hasFailedURL := m.GetFailedStepRunURL() != ""
 	if m.state.Status == chain.ChainRunning {
 		s.WriteString(ui.HelpStyle.Render("[esc/q] close (continues)  [C-c] stop  [c] copy script"))
+	} else if m.state.Status == chain.ChainFailed && hasFailedURL {
+		s.WriteString(ui.HelpStyle.Render("[esc/q] close  [o] open in browser  [l] view logs  [c] copy script"))
 	} else if m.state.Status == chain.ChainCompleted || m.state.Status == chain.ChainFailed {
 		s.WriteString(ui.HelpStyle.Render("[esc/q] close  [l] view logs  [c] copy script"))
 	} else {
@@ -213,6 +238,44 @@ func (m *ChainStatusModal) WasStopped() bool {
 // Result returns nil for chain status modal.
 func (m *ChainStatusModal) Result() any {
 	return nil
+}
+
+// GetFailedStepRunURL returns the URL of the failed step's run, if available.
+func (m *ChainStatusModal) GetFailedStepRunURL() string {
+	if m.state.Error != nil {
+		if url := chainerr.GetRunURL(m.state.Error); url != "" {
+			return url
+		}
+	}
+
+	for _, result := range m.state.StepResults {
+		if result != nil && result.Status == chain.StepFailed && result.RunURL != "" {
+			return result.RunURL
+		}
+	}
+	return ""
+}
+
+// GetDetailedError returns a detailed error message with context.
+func (m *ChainStatusModal) GetDetailedError() string {
+	if m.state.Error == nil {
+		return ""
+	}
+
+	var sb strings.Builder
+	sb.WriteString(m.state.Error.Error())
+
+	if url := chainerr.GetRunURL(m.state.Error); url != "" {
+		sb.WriteString("\nRun URL: ")
+		sb.WriteString(url)
+	}
+
+	if suggestion := chainerr.GetSuggestion(m.state.Error); suggestion != "" {
+		sb.WriteString("\nSuggestion: ")
+		sb.WriteString(suggestion)
+	}
+
+	return sb.String()
 }
 
 func stepStatusIcon(status chain.StepStatus) string {

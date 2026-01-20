@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kyleking/gh-lazydispatch/internal/config"
+	chainerr "github.com/kyleking/gh-lazydispatch/internal/errors"
 	"github.com/kyleking/gh-lazydispatch/internal/github"
 	"github.com/kyleking/gh-lazydispatch/internal/runner"
 	"github.com/kyleking/gh-lazydispatch/internal/watcher"
@@ -39,6 +40,7 @@ type StepResult struct {
 	Workflow   string
 	Inputs     map[string]string
 	RunID      int64
+	RunURL     string
 	Status     StepStatus
 	Conclusion string
 }
@@ -243,7 +245,11 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 
 	inputs, err := InterpolateInputs(step.Inputs, ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to interpolate inputs: %w", err)
+		return nil, &chainerr.InterpolationError{
+			Field: "inputs",
+			Value: fmt.Sprintf("%v", step.Inputs),
+			Cause: err,
+		}
 	}
 
 	cfg := runner.RunConfig{
@@ -254,10 +260,25 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 
 	runID, err := runner.ExecuteAndGetRunID(cfg, e.client)
 	if err != nil {
-		return nil, fmt.Errorf("failed to dispatch workflow: %w", err)
+		suggestion := ""
+		if e.branch != "" {
+			suggestion = fmt.Sprintf("Verify workflow %q exists and supports workflow_dispatch on branch %q", step.Workflow, e.branch)
+		}
+		return nil, &chainerr.StepDispatchError{
+			Workflow:   step.Workflow,
+			Branch:     e.branch,
+			Cause:      err,
+			Suggestion: suggestion,
+		}
 	}
 
 	e.watcher.Watch(runID, step.Workflow)
+
+	run, _ := e.client.GetWorkflowRun(runID)
+	runURL := ""
+	if run != nil {
+		runURL = run.HTMLURL
+	}
 
 	e.mu.Lock()
 	e.state.StepStatuses[idx] = StepWaiting
@@ -269,13 +290,23 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 			Workflow: step.Workflow,
 			Inputs:   inputs,
 			RunID:    runID,
+			RunURL:   runURL,
 			Status:   StepCompleted,
 		}, nil
 	}
 
-	conclusion, err := e.waitForRun(runID, step.WaitFor)
+	conclusion, waitRunURL, err := e.waitForRun(runID, step.WaitFor)
+	if waitRunURL != "" {
+		runURL = waitRunURL
+	}
 	if err != nil {
-		return nil, err
+		return nil, &chainerr.StepExecutionError{
+			StepIndex: idx,
+			Workflow:  step.Workflow,
+			RunID:     runID,
+			RunURL:    runURL,
+			Cause:     err,
+		}
 	}
 
 	status := StepCompleted
@@ -287,27 +318,32 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 		Workflow:   step.Workflow,
 		Inputs:     inputs,
 		RunID:      runID,
+		RunURL:     runURL,
 		Status:     status,
 		Conclusion: conclusion,
 	}, nil
 }
 
-func (e *ChainExecutor) waitForRun(runID int64, waitFor config.WaitCondition) (string, error) {
+func (e *ChainExecutor) waitForRun(runID int64, waitFor config.WaitCondition) (conclusion, runURL string, err error) {
 	ticker := time.NewTicker(watcher.PollInterval)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-e.stopCh:
-			return "", fmt.Errorf("chain execution stopped")
+			return "", "", fmt.Errorf("chain execution stopped")
 		case <-ticker.C:
-			run, err := e.client.GetWorkflowRun(runID)
-			if err != nil {
-				return "", fmt.Errorf("failed to poll run %d: %w", runID, err)
+			run, pollErr := e.client.GetWorkflowRun(runID)
+			if pollErr != nil {
+				return "", "", &chainerr.RunWaitError{
+					RunID: runID,
+					Cause: pollErr,
+				}
 			}
 
+			runURL = run.HTMLURL
 			if run.Status == github.StatusCompleted {
-				return run.Conclusion, nil
+				return run.Conclusion, runURL, nil
 			}
 		}
 	}

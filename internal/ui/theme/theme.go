@@ -11,6 +11,8 @@ type Theme struct {
 	SoftMuted lipgloss.Color // Overlay1 - default values, less critical info
 	Text      lipgloss.Color // Text - normal text
 	ModalBg   lipgloss.Color // Mantle - modal background
+	Error     lipgloss.Color // Red - error messages
+	Link      lipgloss.Color // Blue - URLs and links
 }
 
 // Latte returns the Catppuccin Latte (light) theme.
@@ -23,6 +25,8 @@ func Latte() Theme {
 		SoftMuted: lipgloss.Color("#8c8fa1"), // Overlay1
 		Text:      lipgloss.Color("#4c4f69"), // Text
 		ModalBg:   lipgloss.Color("#e6e9ef"), // Mantle
+		Error:     lipgloss.Color("#d20f39"), // Red
+		Link:      lipgloss.Color("#1e66f5"), // Blue
 	}
 }
 
@@ -36,5 +40,7 @@ func Macchiato() Theme {
 		SoftMuted: lipgloss.Color("#a5adcb"), // Overlay1
 		Text:      lipgloss.Color("#cad3f5"), // Text
 		ModalBg:   lipgloss.Color("#1e2030"), // Mantle
+		Error:     lipgloss.Color("#ed8796"), // Red
+		Link:      lipgloss.Color("#8aadf4"), // Blue
 	}
 }
