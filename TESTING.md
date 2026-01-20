@@ -62,21 +62,21 @@ func (m *mockGitHubClient) GetWorkflowRun(runID int64) (*github.WorkflowRun, err
 
 Located in `internal/logs/integration_test.go`.
 
-**Purpose**: Test complete workflows including GitHub API calls and gh CLI execution.
+**Purpose**: Test complete workflows including all GitHub interactions via gh CLI.
 
 **Characteristics**:
 - Test realistic scenarios (success, failure, warnings, errors)
-- Use mocked GitHub API responses (httpmock)
-- Use mocked gh CLI execution (CommandExecutor interface)
+- Use mocked gh CLI execution (CommandExecutor interface) for ALL GitHub interactions
 - Use realistic test fixtures from `testdata/logs/`
 - Run in CI without requiring real GitHub credentials
+- Unified mocking strategy: all GitHub operations (API calls and log fetching) use the same CommandExecutor mock
 
 **Scenarios Covered**:
 - ✅ Successful workflow run
 - ✅ Failed workflow run with error detection
 - ✅ Workflow with warnings
-- ✅ gh CLI command failures
-- ✅ GitHub API errors
+- ✅ gh CLI command failures (for both API calls and log fetching)
+- ✅ GitHub API errors (via gh api command failures)
 - ✅ gh CLI availability checking
 
 ## Mock Infrastructure
@@ -122,21 +122,30 @@ Fixtures contain realistic GitHub Actions log output with:
 - Warning patterns (`WARNING:`)
 - Actual command output from pip, pytest, etc.
 
-### GitHub API Mocking
+### GitHub API Mocking via gh CLI
 
-Uses `httpmock` to intercept HTTP requests:
+All GitHub API interactions are mocked through the CommandExecutor interface using `gh api` commands:
 
 ```go
-httpmock.Activate()
-defer httpmock.DeactivateAndReset()
+mockExec := exec.NewMockExecutor()
 
-httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/actions/runs/123/jobs",
-    httpmock.NewJsonResponderOrPanic(200, github.JobsResponse{
-        Jobs: []github.Job{...},
-    }))
+// Mock gh api response for GetWorkflowRunJobs
+jobsResp := github.JobsResponse{
+    Jobs: []github.Job{...},
+}
+jobsJSON, _ := json.Marshal(jobsResp)
+mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/123/jobs"}, string(jobsJSON), "", nil)
+
+// Mock gh run view for log fetching
+logOutput := loadFixture(t, "successful_run.txt")
+mockExec.AddGHRunView(runID, jobID, logOutput)
 ```
 
-**Limitation**: The `go-gh` library creates its own HTTP client that doesn't use `http.DefaultTransport`, which prevents `httpmock` from intercepting all requests. As a result, some API-level integration tests may require alternative approaches or be skipped.
+**Benefits of unified gh CLI approach**:
+- Single mocking point for all GitHub interactions
+- Consistent authentication handling
+- Simpler test setup
+- No HTTP transport layer mocking needed
 
 ## Writing New Tests
 
@@ -162,23 +171,40 @@ func TestMyFunction(t *testing.T) {
 ### Adding an Integration Test
 
 1. Create test fixture in `testdata/logs/` if needed
-2. Set up both httpmock and MockExecutor
+2. Set up MockExecutor with both gh api and gh run view mocks
 3. Test the full flow from API call to log parsing
 
 ```go
 func TestIntegration_MyScenario(t *testing.T) {
-    // Setup httpmock
-    httpmock.Activate()
-    defer httpmock.DeactivateAndReset()
-    httpmock.RegisterResponder("GET", "...", ...)
+    runID := int64(12345)
+    jobID := int64(67890)
 
     // Setup mock executor
     mockExec := exec.NewMockExecutor()
+
+    // Mock gh api response for GetWorkflowRunJobs
+    jobsResp := github.JobsResponse{
+        Jobs: []github.Job{
+            {
+                ID:         jobID,
+                Name:       "build",
+                Status:     github.StatusCompleted,
+                Conclusion: github.ConclusionSuccess,
+                Steps: []github.Step{
+                    {Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
+                },
+            },
+        },
+    }
+    jobsJSON, _ := json.Marshal(jobsResp)
+    mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12345/jobs"}, string(jobsJSON), "", nil)
+
+    // Mock gh run view for log fetching
     logOutput := loadFixture(t, "my_fixture.txt")
     mockExec.AddGHRunView(runID, jobID, logOutput)
 
-    // Create client and fetcher
-    client, _ := github.NewClient("owner/repo")
+    // Create client and fetcher with mock executor
+    client, _ := github.NewClientWithExecutor("owner/repo", mockExec)
     fetcher := logs.NewGHFetcherWithExecutor(client, mockExec)
 
     // Execute and assert

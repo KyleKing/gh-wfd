@@ -1,11 +1,11 @@
 package logs_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/jarcoal/httpmock"
 	"github.com/kyleking/gh-lazydispatch/internal/exec"
 	"github.com/kyleking/gh-lazydispatch/internal/github"
 	"github.com/kyleking/gh-lazydispatch/internal/logs"
@@ -13,40 +13,39 @@ import (
 
 // TestIntegration_SuccessfulWorkflowRun tests fetching logs for a successful workflow run.
 func TestIntegration_SuccessfulWorkflowRun(t *testing.T) {
-	// Setup: Create mock GitHub client with httpmock
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	// Mock the GitHub API responses
+	// Setup: Mock data
 	runID := int64(12345)
 	jobID := int64(67890)
 
-	// Mock GetWorkflowRunJobs response
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/actions/runs/12345/jobs",
-		httpmock.NewJsonResponderOrPanic(200, github.JobsResponse{
-			Jobs: []github.Job{
-				{
-					ID:         jobID,
-					Name:       "build",
-					Status:     github.StatusCompleted,
-					Conclusion: github.ConclusionSuccess,
-					Steps: []github.Step{
-						{Name: "Run actions/checkout@v4", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
-						{Name: "Set up Python 3.11", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 2},
-						{Name: "Install dependencies", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 3},
-						{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 4},
-					},
+	// Setup: Create mock executor
+	mockExec := exec.NewMockExecutor()
+
+	// Mock gh api response for GetWorkflowRunJobs
+	jobsResp := github.JobsResponse{
+		Jobs: []github.Job{
+			{
+				ID:         jobID,
+				Name:       "build",
+				Status:     github.StatusCompleted,
+				Conclusion: github.ConclusionSuccess,
+				Steps: []github.Step{
+					{Name: "Run actions/checkout@v4", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
+					{Name: "Set up Python 3.11", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 2},
+					{Name: "Install dependencies", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 3},
+					{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 4},
 				},
 			},
-		}))
+		},
+	}
+	jobsJSON, _ := json.Marshal(jobsResp)
+	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12345/jobs"}, string(jobsJSON), "", nil)
 
-	// Setup: Create mock executor with test fixture
-	mockExec := exec.NewMockExecutor()
+	// Mock gh run view for log fetching
 	logOutput := loadFixture(t, "successful_run.txt")
 	mockExec.AddGHRunView(runID, jobID, logOutput)
 
 	// Setup: Create GitHub client and GHFetcher with mocks
-	client, err := github.NewClient("owner/repo")
+	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
@@ -90,48 +89,67 @@ func TestIntegration_SuccessfulWorkflowRun(t *testing.T) {
 	}
 
 	// Verify mock executor was called correctly
-	if len(mockExec.ExecutedCommands) != 1 {
-		t.Errorf("expected 1 gh command, got %d", len(mockExec.ExecutedCommands))
+	// Should have 2 commands: gh api (for jobs) + gh run view (for logs)
+	if len(mockExec.ExecutedCommands) != 2 {
+		t.Errorf("expected 2 gh commands, got %d", len(mockExec.ExecutedCommands))
 	}
 
-	execCmd := mockExec.ExecutedCommands[0]
-	if execCmd.Name != "gh" {
-		t.Errorf("command name: got %q, want %q", execCmd.Name, "gh")
+	// First command should be gh api for getting jobs
+	if len(mockExec.ExecutedCommands) >= 1 {
+		apiCmd := mockExec.ExecutedCommands[0]
+		if apiCmd.Name != "gh" {
+			t.Errorf("command 0 name: got %q, want %q", apiCmd.Name, "gh")
+		}
+		if len(apiCmd.Args) >= 1 && apiCmd.Args[0] != "api" {
+			t.Errorf("command 0 args[0]: got %q, want %q", apiCmd.Args[0], "api")
+		}
+	}
+
+	// Second command should be gh run view for getting logs
+	if len(mockExec.ExecutedCommands) >= 2 {
+		runCmd := mockExec.ExecutedCommands[1]
+		if runCmd.Name != "gh" {
+			t.Errorf("command 1 name: got %q, want %q", runCmd.Name, "gh")
+		}
+		if len(runCmd.Args) >= 1 && runCmd.Args[0] != "run" {
+			t.Errorf("command 1 args[0]: got %q, want %q", runCmd.Args[0], "run")
+		}
 	}
 }
 
 // TestIntegration_FailedWorkflowRun tests fetching logs for a failed workflow run.
 func TestIntegration_FailedWorkflowRun(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
 	runID := int64(12346)
 	jobID := int64(67891)
 
-	// Mock API response with failed job
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/actions/runs/12346/jobs",
-		httpmock.NewJsonResponderOrPanic(200, github.JobsResponse{
-			Jobs: []github.Job{
-				{
-					ID:         jobID,
-					Name:       "build",
-					Status:     github.StatusCompleted,
-					Conclusion: github.ConclusionFailure,
-					Steps: []github.Step{
-						{Name: "Run actions/checkout@v4", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
-						{Name: "Set up Python 3.11", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 2},
-						{Name: "Install dependencies", Status: github.StatusCompleted, Conclusion: github.ConclusionFailure, Number: 3},
-						{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSkipped, Number: 4},
-					},
+	// Setup: Create mock executor
+	mockExec := exec.NewMockExecutor()
+
+	// Mock gh api response with failed job
+	jobsResp := github.JobsResponse{
+		Jobs: []github.Job{
+			{
+				ID:         jobID,
+				Name:       "build",
+				Status:     github.StatusCompleted,
+				Conclusion: github.ConclusionFailure,
+				Steps: []github.Step{
+					{Name: "Run actions/checkout@v4", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
+					{Name: "Set up Python 3.11", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 2},
+					{Name: "Install dependencies", Status: github.StatusCompleted, Conclusion: github.ConclusionFailure, Number: 3},
+					{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSkipped, Number: 4},
 				},
 			},
-		}))
+		},
+	}
+	jobsJSON, _ := json.Marshal(jobsResp)
+	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12346/jobs"}, string(jobsJSON), "", nil)
 
-	mockExec := exec.NewMockExecutor()
+	// Mock gh run view for log fetching
 	logOutput := loadFixture(t, "failed_run.txt")
 	mockExec.AddGHRunView(runID, jobID, logOutput)
 
-	client, err := github.NewClient("owner/repo")
+	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
@@ -180,36 +198,38 @@ func TestIntegration_FailedWorkflowRun(t *testing.T) {
 
 // TestIntegration_WorkflowWithWarnings tests log parsing with warning detection.
 func TestIntegration_WorkflowWithWarnings(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
 	runID := int64(12347)
 	jobID := int64(67892)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/actions/runs/12347/jobs",
-		httpmock.NewJsonResponderOrPanic(200, github.JobsResponse{
-			Jobs: []github.Job{
-				{
-					ID:         jobID,
-					Name:       "lint",
-					Status:     github.StatusCompleted,
-					Conclusion: github.ConclusionSuccess,
-					Steps: []github.Step{
-						{Name: "Run actions/checkout@v4", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
-						{Name: "Set up Python 3.11", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 2},
-						{Name: "Install dependencies", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 3},
-						{Name: "Run linter", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 4},
-						{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 5},
-					},
+	// Setup: Create mock executor
+	mockExec := exec.NewMockExecutor()
+
+	// Mock gh api response
+	jobsResp := github.JobsResponse{
+		Jobs: []github.Job{
+			{
+				ID:         jobID,
+				Name:       "lint",
+				Status:     github.StatusCompleted,
+				Conclusion: github.ConclusionSuccess,
+				Steps: []github.Step{
+					{Name: "Run actions/checkout@v4", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
+					{Name: "Set up Python 3.11", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 2},
+					{Name: "Install dependencies", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 3},
+					{Name: "Run linter", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 4},
+					{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 5},
 				},
 			},
-		}))
+		},
+	}
+	jobsJSON, _ := json.Marshal(jobsResp)
+	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12347/jobs"}, string(jobsJSON), "", nil)
 
-	mockExec := exec.NewMockExecutor()
+	// Mock gh run view for log fetching
 	logOutput := loadFixture(t, "run_with_warnings.txt")
 	mockExec.AddGHRunView(runID, jobID, logOutput)
 
-	client, err := github.NewClient("owner/repo")
+	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
@@ -239,32 +259,33 @@ func TestIntegration_WorkflowWithWarnings(t *testing.T) {
 
 // TestIntegration_GHCLIError tests handling of gh CLI command failures.
 func TestIntegration_GHCLIError(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
 	runID := int64(12348)
 	jobID := int64(67893)
 
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/actions/runs/12348/jobs",
-		httpmock.NewJsonResponderOrPanic(200, github.JobsResponse{
-			Jobs: []github.Job{
-				{
-					ID:         jobID,
-					Name:       "build",
-					Status:     github.StatusCompleted,
-					Conclusion: github.ConclusionSuccess,
-					Steps: []github.Step{
-						{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
-					},
+	// Setup: Create mock executor
+	mockExec := exec.NewMockExecutor()
+
+	// Mock gh api response
+	jobsResp := github.JobsResponse{
+		Jobs: []github.Job{
+			{
+				ID:         jobID,
+				Name:       "build",
+				Status:     github.StatusCompleted,
+				Conclusion: github.ConclusionSuccess,
+				Steps: []github.Step{
+					{Name: "Run tests", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess, Number: 1},
 				},
 			},
-		}))
+		},
+	}
+	jobsJSON, _ := json.Marshal(jobsResp)
+	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12348/jobs"}, string(jobsJSON), "", nil)
 
-	mockExec := exec.NewMockExecutor()
 	// Simulate gh CLI error (e.g., network timeout, auth failure)
 	mockExec.AddGHRunViewError(runID, jobID, "HTTP 401: Bad credentials", fmt.Errorf("exit status 1"))
 
-	client, err := github.NewClient("owner/repo")
+	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
@@ -293,20 +314,16 @@ func TestIntegration_GHCLIError(t *testing.T) {
 
 // TestIntegration_GitHubAPIError tests handling of GitHub API failures.
 func TestIntegration_GitHubAPIError(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
 	runID := int64(12349)
 
-	// Mock API error response (e.g., rate limiting, server error)
-	httpmock.RegisterResponder("GET", "https://api.github.com/repos/owner/repo/actions/runs/12349/jobs",
-		httpmock.NewJsonResponderOrPanic(500, map[string]string{
-			"message": "Internal Server Error",
-		}))
-
+	// Setup: Create mock executor
 	mockExec := exec.NewMockExecutor()
 
-	client, err := github.NewClient("owner/repo")
+	// Mock gh api error response (e.g., rate limiting, server error)
+	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12349/jobs"},
+		"", "HTTP 500: Internal Server Error", fmt.Errorf("exit status 1"))
+
+	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
@@ -318,18 +335,13 @@ func TestIntegration_GitHubAPIError(t *testing.T) {
 
 	// Assert: Should return error
 	if err == nil {
-		t.Fatal("expected error when GitHub API returns 500, got nil")
+		t.Fatal("expected error when gh api fails, got nil")
 	}
 
 	if err.Error() == "" {
 		t.Error("expected non-empty error message")
 	}
 }
-
-// NOTE: Rate limiting and other GitHub API error tests are skipped because
-// the go-gh library creates its own HTTP client that doesn't use http.DefaultTransport,
-// which prevents httpmock from intercepting requests. For true API integration testing,
-// consider using a test GitHub instance or recording real API interactions.
 
 // TestIntegration_CheckGHCLIAvailable tests gh CLI availability checking.
 func TestIntegration_CheckGHCLIAvailable(t *testing.T) {
