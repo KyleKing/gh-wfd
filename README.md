@@ -14,6 +14,7 @@ Interactive GitHub Actions workflow dispatcher TUI with fuzzy selection, input c
 - Watch mode for real-time workflow run updates
 - Frecency-based workflow history tracking
 - Workflow chains for multi-step deployments
+- Log viewer with filtering, search, and real-time streaming
 - Tabbed right panel (History, Chains, Live runs)
 - Theme support (Catppuccin)
 - Command preview before execution
@@ -103,6 +104,19 @@ The tool will discover all workflows with `workflow_dispatch` triggers and prese
 | `d` | Clear selected run |
 | `D` | Clear all completed runs |
 
+#### Log Viewer
+
+| Key | Action |
+|-----|--------|
+| `l` | Open log viewer (from chain status or history) |
+| `Tab` / `Shift+Tab` | Switch between step tabs |
+| `f` | Cycle filter (all / errors / warnings) |
+| `/` | Search logs |
+| `n` / `N` | Next / previous search match |
+| `i` | Toggle case sensitivity |
+| `o` | Open run in browser |
+| `q` / `Esc` | Close log viewer |
+
 #### General
 
 | Key | Action |
@@ -157,6 +171,31 @@ chains:
 3. Navigate with `j`/`k` and press `Enter` to execute
 
 The status bar shows `Chains(N)` when chains are configured, and `Chain: name (step/total)` during execution.
+
+## Log Viewer
+
+View workflow run logs directly in the TUI with filtering, search, and real-time streaming.
+
+### Accessing Logs
+
+- **From Chain Status**: Press `l` after a chain completes or fails
+- **From History**: Select a history entry and press `l`
+
+### Features
+
+- **Step Navigation**: Logs are organized by workflow step with tabs
+- **Filtering**: Cycle through all/errors/warnings with `f`
+- **Search**: Press `/` to search, `n`/`N` to navigate matches
+- **Live Streaming**: Logs update in real-time for active runs
+- **Error Focus**: When opened from a failed chain, automatically filters to errors
+
+### Requirements
+
+Log viewing requires `gh` CLI to be installed and authenticated:
+
+```bash
+gh auth login
+```
 
 ## Recording the Demo
 
