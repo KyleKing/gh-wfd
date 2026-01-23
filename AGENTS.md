@@ -170,6 +170,12 @@ func (m *mockGitHubClient) GetWorkflowRun(runID int64) (*github.WorkflowRun, err
 }
 ```
 
+**Test Safety:**
+- NEVER use `exec.NewRealExecutor()` in tests - always use `exec.NewMockExecutor()`
+- Runtime safety check panics on mutation commands during tests (gh workflow run, gh pr create, etc.)
+- Always inject mocks: `runner.SetExecutor(mockExec)` or use `...WithExecutor` functions
+- See `TESTING.md` for detailed mock infrastructure and safety mechanisms
+
 **Fixture Patterns:**
 - Store test data in `testdata/` (workflows, logs, configs)
 - Generate large datasets programmatically (see `internal/testutil/fixtures.go`)
@@ -201,6 +207,9 @@ case <-time.After(100 * time.Millisecond):
 - Race detection: `go test -race ./...`
 - Coverage reporting: `go test -coverprofile=coverage.out ./...`
 - Benchmarks tracked: `go test -bench=. -benchmem ./...`
+
+**Detailed Testing Documentation:**
+- See `TESTING.md` for mock infrastructure, safety mechanisms, and debugging guides
 
 ## Anti-Patterns to Avoid
 
@@ -240,6 +249,14 @@ case <-time.After(100 * time.Millisecond):
 
 - Define specific Msg types for each async operation
 - Pattern: `type XxxResultMsg struct { Value T; Err error }`
+
+### UI Architecture
+
+- Four-pane layout: status bar, workflows (left), tabbed panel (right), config (bottom)
+- Modals: centered overlays with Esc to cancel, Enter to confirm
+- Keyboard-first: 1-9/0 shortcuts, Tab for pane switching, h/l for tab navigation
+- Visual feedback: status icons (o/*/+/x/-), dimmed defaults, validation errors
+- See `UX.md` for complete layout, shortcuts, and interaction patterns
 
 ## Constants
 

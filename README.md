@@ -227,3 +227,23 @@ go get -u ./... && go mod tidy && go test ./...
 # - https://github.com/golangci/golangci-lint/releases
 # - https://github.com/goreleaser/goreleaser-action/releases
 ```
+
+### Verification
+
+```bash
+# Run full CI
+mise run ci
+
+# Check test coverage
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out | grep total
+
+# Verify no regressions
+go test -race ./...
+```
+
+## Planned Features
+
+- [ ] Add timeline view for log visualization
+- [ ] Pattern detection for common errors (timeouts, OOM, permissions)
+- [ ] Implement export functionality (markdown export for logs)
