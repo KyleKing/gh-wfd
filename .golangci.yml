@@ -1,0 +1,51 @@
+# Configuration file for golangci-lint
+# For more options, see https://golangci-lint.run/usage/configuration/
+
+version: 2
+
+linters:
+  disable:
+    - forbidigo  # forbids identifiers matched by reg exps
+  enable:
+    - asciicheck
+    - bodyclose
+    - copyloopvar
+    - cyclop
+    - durationcheck
+    - errcheck
+    - errorlint
+    - fatcontext
+    - gocritic
+    - gomoddirectives
+    - gomodguard
+    - gosec
+    - govet
+    - iface
+    - ineffassign
+    - intrange
+    - misspell
+    - nakedret
+    - nilerr
+    - noctx
+    - nolintlint
+    - perfsprint
+    - prealloc
+    - predeclared
+    - revive
+    - sqlclosecheck
+    - staticcheck
+    - testifylint
+    - testpackage
+    - unconvert
+    - unused
+    - wastedassign
+    - wrapcheck
+    - wsl
+
+linters-settings:
+  revive:
+    enable-all-rules: true
+  staticcheck:
+    checks: ["all"]
+  testifylint:
+    enable-all: true
