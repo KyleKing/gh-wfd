@@ -96,6 +96,7 @@ func TestParseValidationComment(t *testing.T) {
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
+
 				return
 			}
 
@@ -108,6 +109,7 @@ func TestParseValidationComment(t *testing.T) {
 				if rule != nil {
 					t.Errorf("expected nil rule, got %+v", rule)
 				}
+
 				return
 			}
 
@@ -119,12 +121,15 @@ func TestParseValidationComment(t *testing.T) {
 			if rule.Type != tt.wantRule.Type {
 				t.Errorf("type = %v, want %v", rule.Type, tt.wantRule.Type)
 			}
+
 			if rule.Pattern != tt.wantRule.Pattern {
 				t.Errorf("pattern = %q, want %q", rule.Pattern, tt.wantRule.Pattern)
 			}
+
 			if rule.Min != tt.wantRule.Min {
 				t.Errorf("min = %d, want %d", rule.Min, tt.wantRule.Min)
 			}
+
 			if rule.Max != tt.wantRule.Max {
 				t.Errorf("max = %d, want %d", rule.Max, tt.wantRule.Max)
 			}
@@ -151,6 +156,7 @@ func TestParseValidationComments(t *testing.T) {
 	if rules[0].Type != RuleRequired {
 		t.Errorf("first rule type = %v, want %v", rules[0].Type, RuleRequired)
 	}
+
 	if rules[1].Type != RulePrefix {
 		t.Errorf("second rule type = %v, want %v", rules[1].Type, RulePrefix)
 	}
@@ -360,6 +366,7 @@ func TestParseRange(t *testing.T) {
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
+
 				return
 			}
 
@@ -371,6 +378,7 @@ func TestParseRange(t *testing.T) {
 			if min != tt.wantMin {
 				t.Errorf("min = %d, want %d", min, tt.wantMin)
 			}
+
 			if max != tt.wantMax {
 				t.Errorf("max = %d, want %d", max, tt.wantMax)
 			}

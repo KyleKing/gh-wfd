@@ -68,6 +68,7 @@ func getCurrentBranchWithRunner(ctx context.Context, r CommandRunner) string {
 	if branch == "HEAD" {
 		return ""
 	}
+
 	return branch
 }
 
@@ -88,6 +89,7 @@ func getDefaultBranchWithRunner(ctx context.Context, r CommandRunner) string {
 
 	ref := strings.TrimSpace(string(output))
 	branch := strings.TrimPrefix(ref, "refs/remotes/origin/")
+
 	return branch
 }
 
@@ -123,6 +125,7 @@ func _deduplicateBranches(branches []string) []string {
 	for _, branch := range branches {
 		if !seen[branch] {
 			seen[branch] = true
+
 			result = append(result, branch)
 		}
 	}

@@ -41,6 +41,7 @@ func testHistory() *frecency.Store {
 	store.Record("owner/repo", "deploy.yml", "main", map[string]string{"environment": "prod"})
 	store.Record("owner/repo", "ci.yml", "main", map[string]string{})
 	store.Record("owner/repo", "deploy.yml", "develop", map[string]string{"environment": "staging"})
+
 	return store
 }
 
@@ -150,6 +151,7 @@ func TestUpdate_WindowSize(t *testing.T) {
 	if m.width != 120 {
 		t.Errorf("expected width 120, got %d", m.width)
 	}
+
 	if m.height != 40 {
 		t.Errorf("expected height 40, got %d", m.height)
 	}
@@ -164,6 +166,7 @@ func TestView_NotEmpty(t *testing.T) {
 	if view == "" {
 		t.Error("expected non-empty view")
 	}
+
 	if len(view) < 100 {
 		t.Errorf("expected view to be substantial, got length %d", len(view))
 	}
@@ -176,6 +179,7 @@ func TestSelectedWorkflow(t *testing.T) {
 	if wf == nil {
 		t.Fatal("expected non-nil workflow")
 	}
+
 	if wf.Filename != "deploy.yml" {
 		t.Errorf("expected 'deploy.yml', got %q", wf.Filename)
 	}
@@ -220,6 +224,7 @@ func TestUpdate_UpDown_Config(t *testing.T) {
 	if m.selectedInput != 0 {
 		t.Errorf("expected selectedInput 0 after down, got %d", m.selectedInput)
 	}
+
 	if m.viewMode != InputDetailMode {
 		t.Errorf("expected InputDetailMode, got %d", m.viewMode)
 	}
@@ -256,6 +261,7 @@ func TestHandleSelectResult(t *testing.T) {
 	if m.inputs["environment"] != "production" {
 		t.Errorf("expected environment=production, got %q", m.inputs["environment"])
 	}
+
 	if m.pendingInputName != "" {
 		t.Error("expected pendingInputName to be cleared")
 	}
@@ -282,6 +288,7 @@ func TestHandleInputResult(t *testing.T) {
 	if m.inputs["environment"] != "staging" {
 		t.Errorf("expected environment=staging, got %q", m.inputs["environment"])
 	}
+
 	if m.pendingInputName != "" {
 		t.Error("expected pendingInputName to be cleared")
 	}
@@ -308,6 +315,7 @@ func TestHandleConfirmResult(t *testing.T) {
 			if m.inputs["debug"] != tt.want {
 				t.Errorf("expected debug=%s, got %q", tt.want, m.inputs["debug"])
 			}
+
 			if m.pendingInputName != "" {
 				t.Error("expected pendingInputName to be cleared")
 			}
@@ -324,6 +332,7 @@ func TestHandleFilterResult(t *testing.T) {
 	if m.filterText != "env" {
 		t.Errorf("expected filterText=env, got %q", m.filterText)
 	}
+
 	if m.selectedInput != -1 {
 		t.Errorf("expected selectedInput=-1 after filter, got %d", m.selectedInput)
 	}
@@ -420,11 +429,11 @@ func TestBuildCLIString(t *testing.T) {
 
 func TestHandleWorkflowKey(t *testing.T) {
 	tests := []struct {
-		name             string
-		keyNum           int
-		wantWorkflow     int
-		wantInputsSet    bool
-		wantEnvironment  string
+		name            string
+		keyNum          int
+		wantWorkflow    int
+		wantInputsSet   bool
+		wantEnvironment string
 	}{
 		{
 			name:            "key 0 clears selection",
@@ -506,6 +515,7 @@ func TestGetSelectedInputName(t *testing.T) {
 	}
 
 	m.selectedInput = 0
+
 	name := m.getSelectedInputName()
 	if name != "environment" {
 		t.Errorf("expected 'environment', got %q", name)
@@ -523,5 +533,6 @@ func contains(s, substr string) bool {
 			return true
 		}
 	}
+
 	return false
 }

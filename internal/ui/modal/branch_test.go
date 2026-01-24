@@ -76,6 +76,7 @@ func TestBranchModalSetSize(t *testing.T) {
 			if expectedHeight > 30 {
 				expectedHeight = 30
 			}
+
 			if expectedHeight < 10 {
 				expectedHeight = 10
 			}

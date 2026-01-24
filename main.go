@@ -61,12 +61,14 @@ func main() {
 	repo, err := runner.DetectRepo()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not detect repository: %v\n", err)
+
 		repo = "unknown/unknown"
 	}
 
 	history, err := frecency.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not load history: %v\n", err)
+
 		history = frecency.NewStore()
 	}
 

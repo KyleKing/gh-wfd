@@ -75,6 +75,7 @@ type RunWatcher struct {
 // NewWatcher creates a new RunWatcher.
 func NewWatcher(client GitHubClient) *RunWatcher {
 	ctx, cancel := context.WithCancel(context.Background())
+
 	return &RunWatcher{
 		client:  client,
 		runs:    make(map[int64]*WatchedRun),
@@ -119,6 +120,7 @@ func (w *RunWatcher) GetRuns() []WatchedRun {
 	for _, run := range w.runs {
 		runs = append(runs, *run)
 	}
+
 	return runs
 }
 
@@ -131,6 +133,7 @@ func (w *RunWatcher) GetRun(runID int64) (*WatchedRun, bool) {
 	if !ok {
 		return nil, false
 	}
+
 	return run, true
 }
 
@@ -140,11 +143,13 @@ func (w *RunWatcher) ActiveCount() int {
 	defer w.mu.RUnlock()
 
 	count := 0
+
 	for _, run := range w.runs {
 		if run.IsActive() {
 			count++
 		}
 	}
+
 	return count
 }
 
@@ -152,6 +157,7 @@ func (w *RunWatcher) ActiveCount() int {
 func (w *RunWatcher) TotalCount() int {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+
 	return len(w.runs)
 }
 
@@ -160,9 +166,11 @@ func (w *RunWatcher) TotalCount() int {
 func (w *RunWatcher) Stop() {
 	w.stopOnce.Do(func() {
 		w.cancel()
+
 		if w.ticker != nil {
 			w.ticker.Stop()
 		}
+
 		w.wg.Wait()
 		close(w.updates)
 	})
@@ -187,15 +195,18 @@ func (w *RunWatcher) ensurePolling() {
 	if w.isPolling {
 		return
 	}
+
 	w.isPolling = true
 
 	w.ticker = time.NewTicker(PollInterval)
 	w.wg.Add(1)
+
 	go w.pollLoop()
 }
 
 func (w *RunWatcher) pollLoop() {
 	defer w.wg.Done()
+
 	for {
 		select {
 		case <-w.ctx.Done():
@@ -209,6 +220,7 @@ func (w *RunWatcher) pollLoop() {
 func (w *RunWatcher) pollAllRuns() {
 	w.mu.RLock()
 	runIDs := make([]int64, 0, len(w.runs))
+
 	for id, run := range w.runs {
 		if run.IsActive() {
 			runIDs = append(runIDs, id)
@@ -230,6 +242,7 @@ func (w *RunWatcher) pollRun(runID int64) {
 		}
 		w.mu.Unlock()
 		w.sendUpdate(RunUpdate{RunID: runID, Error: err})
+
 		return
 	}
 
@@ -241,6 +254,7 @@ func (w *RunWatcher) pollRun(runID int64) {
 		}
 		w.mu.Unlock()
 		w.sendUpdate(RunUpdate{RunID: runID, Error: err})
+
 		return
 	}
 

@@ -96,6 +96,7 @@ func TestCache_Load(t *testing.T) {
 
 	// Create new cache instance and load from disk
 	cache2 := NewCache(cacheDir)
+
 	err = cache2.Load()
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
@@ -106,6 +107,7 @@ func TestCache_Load(t *testing.T) {
 	if !found {
 		t.Error("expected to find test1 after load")
 	}
+
 	if retrieved1.ChainName != "test1" {
 		t.Errorf("test1 ChainName: got %q, want %q", retrieved1.ChainName, "test1")
 	}
@@ -114,6 +116,7 @@ func TestCache_Load(t *testing.T) {
 	if !found {
 		t.Error("expected to find test2 after load")
 	}
+
 	if retrieved2.ChainName != "test2" {
 		t.Errorf("test2 ChainName: got %q, want %q", retrieved2.ChainName, "test2")
 	}
@@ -125,6 +128,7 @@ func TestCache_LoadWithExpiredEntries(t *testing.T) {
 
 	// Add entry with short TTL
 	runLogs := NewRunLogs("test", "main")
+
 	err := cache1.Put("test", 123, runLogs, 1*time.Millisecond)
 	if err != nil {
 		t.Fatalf("Put failed: %v", err)
@@ -135,6 +139,7 @@ func TestCache_LoadWithExpiredEntries(t *testing.T) {
 
 	// Load into new cache - expired entries should be cleaned up
 	cache2 := NewCache(cacheDir)
+
 	err = cache2.Load()
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
@@ -219,6 +224,7 @@ func TestCache_Stats(t *testing.T) {
 	// Add valid entries
 	runLogs1 := NewRunLogs("test1", "main")
 	runLogs2 := NewRunLogs("test2", "main")
+
 	cache.Put("test1", 123, runLogs1, 1*time.Hour)
 	cache.Put("test2", 456, runLogs2, 1*time.Hour)
 
@@ -226,9 +232,11 @@ func TestCache_Stats(t *testing.T) {
 	if stats.TotalEntries != 2 {
 		t.Errorf("TotalEntries: got %d, want 2", stats.TotalEntries)
 	}
+
 	if stats.ValidEntries != 2 {
 		t.Errorf("ValidEntries: got %d, want 2", stats.ValidEntries)
 	}
+
 	if stats.ExpiredEntries != 0 {
 		t.Errorf("ExpiredEntries: got %d, want 0", stats.ExpiredEntries)
 	}
@@ -242,9 +250,11 @@ func TestCache_Stats(t *testing.T) {
 	if stats.TotalEntries != 3 {
 		t.Errorf("TotalEntries: got %d, want 3", stats.TotalEntries)
 	}
+
 	if stats.ValidEntries != 2 {
 		t.Errorf("ValidEntries: got %d, want 2", stats.ValidEntries)
 	}
+
 	if stats.ExpiredEntries != 1 {
 		t.Errorf("ExpiredEntries: got %d, want 1", stats.ExpiredEntries)
 	}
@@ -254,16 +264,19 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 	cache := NewCache(t.TempDir())
 
 	const numGoroutines = 10
+
 	const opsPerGoroutine = 5
 
 	var wg sync.WaitGroup
+
 	wg.Add(numGoroutines * 2)
 
 	// Concurrent writes
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer wg.Done()
-			for j := 0; j < opsPerGoroutine; j++ {
+
+			for j := range opsPerGoroutine {
 				runLogs := NewRunLogs("test", "main")
 				cache.Put("test", int64(id*opsPerGoroutine+j), runLogs, 1*time.Hour)
 			}
@@ -271,10 +284,11 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Concurrent reads
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer wg.Done()
-			for j := 0; j < opsPerGoroutine; j++ {
+
+			for j := range opsPerGoroutine {
 				cache.Get("test", int64(id*opsPerGoroutine+j))
 			}
 		}(i)
@@ -285,6 +299,7 @@ func TestCache_ConcurrentAccess(t *testing.T) {
 	// Verify entries were added
 	stats := cache.Stats()
 	expectedTotal := numGoroutines * opsPerGoroutine
+
 	if stats.TotalEntries != expectedTotal {
 		t.Errorf("TotalEntries: got %d, want %d", stats.TotalEntries, expectedTotal)
 	}
@@ -296,6 +311,7 @@ func TestCache_InvalidJSON(t *testing.T) {
 	// Write invalid JSON to cache file
 	invalidJSON := []byte("{invalid json}")
 	filename := filepath.Join(cacheDir, "test_123.json")
+
 	err := os.WriteFile(filename, invalidJSON, 0644)
 	if err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
@@ -303,6 +319,7 @@ func TestCache_InvalidJSON(t *testing.T) {
 
 	// Load should skip invalid entries
 	cache := NewCache(cacheDir)
+
 	err = cache.Load()
 	if err != nil {
 		t.Fatalf("Load should not fail on invalid JSON: %v", err)
@@ -373,12 +390,14 @@ func TestCache_PersistEntry(t *testing.T) {
 
 	// Verify file contents
 	filename := files[0].Name()
+
 	data, err := os.ReadFile(filepath.Join(cacheDir, filename))
 	if err != nil {
 		t.Fatalf("ReadFile failed: %v", err)
 	}
 
 	var entry CacheEntry
+
 	err = json.Unmarshal(data, &entry)
 	if err != nil {
 		t.Fatalf("Unmarshal failed: %v", err)

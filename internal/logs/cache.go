@@ -40,6 +40,7 @@ func (c *Cache) Get(chainName string, runID int64) (*RunLogs, bool) {
 	defer c.mu.RUnlock()
 
 	key := c.makeKey(chainName, runID)
+
 	entry, ok := c.entries[key]
 	if !ok {
 		return nil, false
@@ -93,6 +94,7 @@ func (c *Cache) Load() error {
 		}
 
 		path := filepath.Join(c.cacheDir, entry.Name())
+
 		data, err := os.ReadFile(path)
 		if err != nil {
 			continue // Skip invalid entries
@@ -166,6 +168,7 @@ func (c *Cache) makeFilename(key string) string {
 	// Replace colons and slashes for filesystem safety
 	safe := key
 	safe = filepath.Base(safe)
+
 	return safe + ".json"
 }
 

@@ -35,23 +35,24 @@ type StreamUpdate struct {
 
 // LogStreamer polls for incremental log updates from active workflow runs.
 type LogStreamer struct {
-	fetcher   *GHFetcher
-	client    GitHubClient
-	runID     int64
-	workflow  string
-	state     *StreamState
-	updates   chan StreamUpdate
-	ctx       context.Context
-	cancel    context.CancelFunc
-	ticker    *time.Ticker
-	stopOnce  sync.Once
-	wg        sync.WaitGroup
-	mu        sync.Mutex
+	fetcher  *GHFetcher
+	client   GitHubClient
+	runID    int64
+	workflow string
+	state    *StreamState
+	updates  chan StreamUpdate
+	ctx      context.Context
+	cancel   context.CancelFunc
+	ticker   *time.Ticker
+	stopOnce sync.Once
+	wg       sync.WaitGroup
+	mu       sync.Mutex
 }
 
 // NewLogStreamer creates a new LogStreamer for a specific run.
 func NewLogStreamer(client GitHubClient, runID int64, workflow string) *LogStreamer {
 	ctx, cancel := context.WithCancel(context.Background())
+
 	return &LogStreamer{
 		fetcher:  NewGHFetcher(client),
 		client:   client,
@@ -68,6 +69,7 @@ func NewLogStreamer(client GitHubClient, runID int64, workflow string) *LogStrea
 func (s *LogStreamer) Start() {
 	s.ticker = time.NewTicker(StreamPollInterval)
 	s.wg.Add(1)
+
 	go s.pollLoop()
 }
 
@@ -81,9 +83,11 @@ func (s *LogStreamer) Updates() <-chan StreamUpdate {
 func (s *LogStreamer) Stop() {
 	s.stopOnce.Do(func() {
 		s.cancel()
+
 		if s.ticker != nil {
 			s.ticker.Stop()
 		}
+
 		s.wg.Wait()
 		close(s.updates)
 	})
@@ -113,6 +117,7 @@ func (s *LogStreamer) poll() {
 			RunID: s.runID,
 			Error: err,
 		})
+
 		return
 	}
 
@@ -125,6 +130,7 @@ func (s *LogStreamer) poll() {
 		})
 		// Stop after sending completion update
 		go s.Stop()
+
 		return
 	}
 
@@ -136,6 +142,7 @@ func (s *LogStreamer) poll() {
 			Status: run.Status,
 			Error:  err,
 		})
+
 		return
 	}
 

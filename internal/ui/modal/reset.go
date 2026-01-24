@@ -54,18 +54,22 @@ func (m *ResetModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 				m.done = true
 				return m, nil
 			}
+
 			m.done = true
 			m.result = true
+
 			return m, func() tea.Msg {
 				return ResetResultMsg{Confirmed: true}
 			}
 		case key.Matches(msg, m.keys.Cancel):
 			m.done = true
+
 			return m, func() tea.Msg {
 				return ResetResultMsg{Confirmed: false}
 			}
 		}
 	}
+
 	return m, nil
 }
 
@@ -80,6 +84,7 @@ func (m *ResetModal) View() string {
 		s.WriteString(ui.SubtitleStyle.Render("No modified values to reset."))
 		s.WriteString("\n\n")
 		s.WriteString(ui.HelpStyle.Render("[enter/esc] close"))
+
 		return s.String()
 	}
 

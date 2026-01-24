@@ -17,20 +17,24 @@ func Discover(repoRoot string) ([]WorkflowFile, error) {
 	}
 
 	var files []string
+
 	for _, pattern := range patterns {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
 			return nil, err
 		}
+
 		files = append(files, matches...)
 	}
 
 	var workflows []WorkflowFile
+
 	for _, file := range files {
 		wf, err := parseWorkflowFile(file)
 		if err != nil {
 			continue
 		}
+
 		if wf.IsDispatchable() {
 			workflows = append(workflows, wf)
 		}
@@ -55,5 +59,6 @@ func parseWorkflowFile(path string) (WorkflowFile, error) {
 	}
 
 	wf.Filename = filepath.Base(path)
+
 	return wf, nil
 }

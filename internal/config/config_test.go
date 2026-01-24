@@ -10,6 +10,7 @@ import (
 
 func TestLoad_ValidConfig(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -26,6 +27,7 @@ chains:
       - workflow: deploy.yml
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -34,12 +36,15 @@ chains:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if cfg == nil {
 		t.Fatal("expected config, got nil")
 	}
+
 	if cfg.Version != 1 {
 		t.Errorf("version: got %d, want 1", cfg.Version)
 	}
+
 	if !cfg.HasChains() {
 		t.Error("expected HasChains() to return true")
 	}
@@ -47,10 +52,12 @@ chains:
 
 func TestLoad_MissingFile(t *testing.T) {
 	dir := t.TempDir()
+
 	cfg, err := config.Load(dir)
 	if err != nil {
 		t.Fatalf("unexpected error for missing file: %v", err)
 	}
+
 	if cfg != nil {
 		t.Error("expected nil config for missing file")
 	}
@@ -58,6 +65,7 @@ func TestLoad_MissingFile(t *testing.T) {
 
 func TestLoad_InvalidYAML(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -76,6 +84,7 @@ func TestLoad_InvalidYAML(t *testing.T) {
 
 func TestLoad_UnsupportedVersion(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -85,6 +94,7 @@ func TestLoad_UnsupportedVersion(t *testing.T) {
 chains: {}
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -97,6 +107,7 @@ chains: {}
 
 func TestLoad_DefaultValues(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -109,6 +120,7 @@ chains:
       - workflow: test.yml
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -122,6 +134,7 @@ chains:
 	if !ok {
 		t.Fatal("expected chain 'test' to exist")
 	}
+
 	if len(chain.Steps) != 1 {
 		t.Fatalf("expected 1 step, got %d", len(chain.Steps))
 	}
@@ -130,6 +143,7 @@ chains:
 	if step.WaitFor != config.WaitSuccess {
 		t.Errorf("WaitFor: got %q, want %q", step.WaitFor, config.WaitSuccess)
 	}
+
 	if step.OnFailure != config.FailureAbort {
 		t.Errorf("OnFailure: got %q, want %q", step.OnFailure, config.FailureAbort)
 	}
@@ -137,6 +151,7 @@ chains:
 
 func TestChainNames_Sorted(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -155,6 +170,7 @@ chains:
       - workflow: m.yml
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -180,6 +196,7 @@ chains:
 
 func TestGetChain_Exists(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -193,6 +210,7 @@ chains:
       - workflow: deploy.yml
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -206,6 +224,7 @@ chains:
 	if !ok {
 		t.Error("expected chain 'deploy' to exist")
 	}
+
 	if chain.Description != "Deploy chain" {
 		t.Errorf("description: got %q, want %q", chain.Description, "Deploy chain")
 	}
@@ -213,6 +232,7 @@ chains:
 
 func TestGetChain_NotFound(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -225,6 +245,7 @@ chains:
       - workflow: deploy.yml
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -263,6 +284,7 @@ func TestHasChains(t *testing.T) {
 
 func TestLoad_Version2WithVariables(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -292,6 +314,7 @@ chains:
           env: "{{ var.env }}"
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
@@ -300,9 +323,11 @@ chains:
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if cfg == nil {
 		t.Fatal("expected config, got nil")
 	}
+
 	if cfg.Version != 2 {
 		t.Errorf("version: got %d, want 2", cfg.Version)
 	}
@@ -320,9 +345,11 @@ chains:
 	if v.Name != "version" {
 		t.Errorf("variable name: got %q, want %q", v.Name, "version")
 	}
+
 	if v.Type != "string" {
 		t.Errorf("variable type: got %q, want %q", v.Type, "string")
 	}
+
 	if !v.Required {
 		t.Error("expected variable to be required")
 	}
@@ -331,6 +358,7 @@ chains:
 	if v2.Type != "choice" {
 		t.Errorf("variable type: got %q, want %q", v2.Type, "choice")
 	}
+
 	if len(v2.Options) != 2 {
 		t.Errorf("expected 2 options, got %d", len(v2.Options))
 	}
@@ -338,6 +366,7 @@ chains:
 
 func TestLoad_Version2DefaultVariableType(t *testing.T) {
 	dir := t.TempDir()
+
 	configDir := filepath.Join(dir, ".github")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create .github dir: %v", err)
@@ -353,6 +382,7 @@ chains:
       - workflow: test.yml
 `
 	configPath := filepath.Join(configDir, "lazydispatch.yml")
+
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}

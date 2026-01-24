@@ -62,6 +62,7 @@ func (m *ValidationErrorModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Continue):
 			m.done = true
 			m.override = true
+
 			return m, func() tea.Msg {
 				return ValidationErrorResultMsg{Override: true}
 			}
@@ -76,6 +77,7 @@ func (m *ValidationErrorModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			}
 		}
 	}
+
 	return m, nil
 }
 
@@ -90,6 +92,7 @@ func (m *ValidationErrorModal) View() string {
 	s.WriteString("\n\n")
 
 	idx := 0
+
 	for inputName, errs := range m.errors {
 		prefix := "  "
 		if idx == m.selected {
@@ -102,17 +105,20 @@ func (m *ValidationErrorModal) View() string {
 		} else {
 			s.WriteString(line)
 		}
+
 		s.WriteString("\n")
 
 		for _, errMsg := range errs {
-			errLine := fmt.Sprintf("    - %s", errMsg)
+			errLine := "    - " + errMsg
 			if idx == m.selected {
 				s.WriteString(ui.SubtitleStyle.Render(errLine))
 			} else {
 				s.WriteString(ui.HelpStyle.Render(errLine))
 			}
+
 			s.WriteString("\n")
 		}
+
 		idx++
 	}
 
@@ -132,5 +138,6 @@ func (m *ValidationErrorModal) Result() any {
 	if m.override {
 		return ValidationErrorResultMsg{Override: true}
 	}
+
 	return nil
 }

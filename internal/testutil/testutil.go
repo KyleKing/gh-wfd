@@ -42,6 +42,7 @@ func WorkflowWithBoolean(name, filename, inputName string, defaultVal bool) work
 	if defaultVal {
 		defaultStr = "true"
 	}
+
 	return WorkflowFixture(name, filename, map[string]workflow.WorkflowInput{
 		inputName: {
 			Type:    "boolean",
@@ -71,12 +72,14 @@ func NewTestHistory(repo string, records []struct {
 	for _, record := range records {
 		store.Record(repo, record.Workflow, record.Branch, record.Inputs)
 	}
+
 	return store
 }
 
 // AssertEqual fails the test if got != want.
 func AssertEqual[T comparable](t *testing.T, got, want T, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if got != want {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -91,6 +94,7 @@ func AssertEqual[T comparable](t *testing.T, got, want T, msgAndArgs ...interfac
 // AssertNotEqual fails the test if got == want.
 func AssertNotEqual[T comparable](t *testing.T, got, want T, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if got == want {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -105,6 +109,7 @@ func AssertNotEqual[T comparable](t *testing.T, got, want T, msgAndArgs ...inter
 // AssertNil fails the test if value is not nil.
 func AssertNil(t *testing.T, value interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if value != nil {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -119,6 +124,7 @@ func AssertNil(t *testing.T, value interface{}, msgAndArgs ...interface{}) {
 // AssertNotNil fails the test if value is nil.
 func AssertNotNil(t *testing.T, value interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if value == nil {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -133,6 +139,7 @@ func AssertNotNil(t *testing.T, value interface{}, msgAndArgs ...interface{}) {
 // AssertTrue fails the test if condition is false.
 func AssertTrue(t *testing.T, condition bool, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if !condition {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -147,6 +154,7 @@ func AssertTrue(t *testing.T, condition bool, msgAndArgs ...interface{}) {
 // AssertFalse fails the test if condition is true.
 func AssertFalse(t *testing.T, condition bool, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if condition {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -161,6 +169,7 @@ func AssertFalse(t *testing.T, condition bool, msgAndArgs ...interface{}) {
 // AssertContains fails the test if haystack doesn't contain needle.
 func AssertContains(t *testing.T, haystack, needle string, msgAndArgs ...interface{}) {
 	t.Helper()
+
 	if !contains(haystack, needle) {
 		if len(msgAndArgs) > 0 {
 			format := msgAndArgs[0].(string)
@@ -182,5 +191,6 @@ func containsHelper(s, substr string) bool {
 			return true
 		}
 	}
+
 	return false
 }

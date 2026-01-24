@@ -9,7 +9,9 @@ import (
 // Higher scores indicate more frequently and recently used entries.
 func Score(entry HistoryEntry) float64 {
 	hoursSince := time.Since(entry.LastRunAt).Hours()
+
 	var recency float64
+
 	switch {
 	case hoursSince < 1:
 		recency = 4.0
@@ -20,6 +22,7 @@ func Score(entry HistoryEntry) float64 {
 	default:
 		recency = 0.5
 	}
+
 	return float64(entry.RunCount) * recency
 }
 
@@ -36,12 +39,15 @@ func FilterByWorkflow(entries []HistoryEntry, workflow string) []HistoryEntry {
 	if workflow == "" {
 		return entries
 	}
+
 	var filtered []HistoryEntry
+
 	for _, e := range entries {
 		if e.Workflow == workflow && (e.Type == EntryTypeWorkflow || e.Type == "") {
 			filtered = append(filtered, e)
 		}
 	}
+
 	return filtered
 }
 
@@ -49,14 +55,17 @@ func FilterByWorkflow(entries []HistoryEntry, workflow string) []HistoryEntry {
 // Empty type "" is treated as workflow for backward compatibility.
 func FilterByType(entries []HistoryEntry, entryType EntryType) []HistoryEntry {
 	var filtered []HistoryEntry
+
 	for _, e := range entries {
 		effectiveType := e.Type
 		if effectiveType == "" {
 			effectiveType = EntryTypeWorkflow
 		}
+
 		if effectiveType == entryType {
 			filtered = append(filtered, e)
 		}
 	}
+
 	return filtered
 }

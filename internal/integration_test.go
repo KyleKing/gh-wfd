@@ -23,6 +23,7 @@ func TestEndToEnd_ChainExecutionWithLogs(t *testing.T) {
 	mockExec := exec.NewMockExecutor()
 	setupChainExecutionMocks(mockExec)
 	runner.SetExecutor(mockExec)
+
 	defer runner.SetExecutor(nil)
 
 	client := testutil.NewMockGitHubClient().
@@ -71,6 +72,7 @@ func TestEndToEnd_LogFetchingWithGHCLI(t *testing.T) {
 	}
 
 	fetcher := logs.NewGHFetcherWithExecutor(client, mockExec)
+
 	stepLogs, err := fetcher.FetchStepLogsReal(1001, "ci.yml")
 	if err != nil {
 		t.Fatalf("log fetch failed: %v", err)
@@ -83,6 +85,7 @@ func TestEndToEnd_LogFetchingWithGHCLI(t *testing.T) {
 	testutil.AssertStepLogNames(t, stepLogs, []string{"Checkout", "Build", "Test"})
 
 	hasError := false
+
 	for _, step := range stepLogs {
 		for _, entry := range step.Entries {
 			if entry.Level == logs.LogLevelError {
@@ -91,6 +94,7 @@ func TestEndToEnd_LogFetchingWithGHCLI(t *testing.T) {
 			}
 		}
 	}
+
 	if hasError {
 		t.Error("unexpected error entries in successful run")
 	}
@@ -107,18 +111,21 @@ func TestEndToEnd_FailedRunWithErrorLogs(t *testing.T) {
 	}
 
 	fetcher := logs.NewGHFetcherWithExecutor(client, mockExec)
+
 	stepLogs, err := fetcher.FetchStepLogsReal(1002, "ci.yml")
 	if err != nil {
 		t.Fatalf("log fetch failed: %v", err)
 	}
 
 	hasFailedStep := false
+
 	for _, step := range stepLogs {
 		if step.Conclusion == github.ConclusionFailure {
 			hasFailedStep = true
 			break
 		}
 	}
+
 	if !hasFailedStep {
 		t.Error("expected at least one failed step")
 	}
@@ -129,6 +136,7 @@ func TestEndToEnd_WatcherRegistration(t *testing.T) {
 	mockExec := exec.NewMockExecutor()
 	mockExec.AddCommand("gh", []string{"workflow", "run", "test.yml", "--ref", "main"}, "", "", nil)
 	runner.SetExecutor(mockExec)
+
 	defer runner.SetExecutor(nil)
 
 	client := testutil.NewMockGitHubClient()
@@ -169,6 +177,7 @@ func TestEndToEnd_ChainFailureHandling(t *testing.T) {
 				"", "dispatch failed", errMockCommand)
 			mockExec.AddCommand("gh", []string{"workflow", "run", "step2.yml", "--ref", "main"}, "", "", nil)
 			runner.SetExecutor(mockExec)
+
 			defer runner.SetExecutor(nil)
 
 			client := testutil.NewMockGitHubClient()
@@ -190,6 +199,7 @@ func TestEndToEnd_ChainFailureHandling(t *testing.T) {
 			if state.Status != tt.wantStatus {
 				t.Errorf("status: got %v, want %v", state.Status, tt.wantStatus)
 			}
+
 			if len(mockExec.ExecutedCommands) != tt.wantCmdsCount {
 				t.Errorf("commands: got %d, want %d", len(mockExec.ExecutedCommands), tt.wantCmdsCount)
 			}
@@ -206,6 +216,7 @@ func setupChainExecutionMocks(m *exec.MockExecutor) {
 
 func setupLogFetchingMocks(t *testing.T, m *exec.MockExecutor) {
 	t.Helper()
+
 	jobsResp := github.JobsResponse{
 		Jobs: []github.Job{{
 			ID: 2001, Name: "build", Status: github.StatusCompleted, Conclusion: github.ConclusionSuccess,
@@ -233,6 +244,7 @@ All tests passed
 
 func setupFailedRunMocks(t *testing.T, m *exec.MockExecutor) {
 	t.Helper()
+
 	jobsResp := github.JobsResponse{
 		Jobs: []github.Job{{
 			ID: 2002, Name: "build", Status: github.StatusCompleted, Conclusion: github.ConclusionFailure,
@@ -262,6 +274,7 @@ ERROR: Build failed
 func TestIntegration_ChainExecutionWithLogViewing(t *testing.T) {
 	mockExec := exec.NewMockExecutor()
 	runner.SetExecutor(mockExec)
+
 	defer runner.SetExecutor(nil)
 
 	// Step 1: ci.yml (runID 5001)
@@ -380,9 +393,11 @@ Deployment successful!
 	if step1 == nil {
 		t.Fatal("step 1 result is nil")
 	}
+
 	if step1.RunID != 5001 {
 		t.Errorf("step 1 runID: got %d, want 5001", step1.RunID)
 	}
+
 	if step1.Status != chain.StepCompleted {
 		t.Errorf("step 1 status: got %v, want %v", step1.Status, chain.StepCompleted)
 	}
@@ -392,9 +407,11 @@ Deployment successful!
 	if step2 == nil {
 		t.Fatal("step 2 result is nil")
 	}
+
 	if step2.RunID != 5002 {
 		t.Errorf("step 2 runID: got %d, want 5002", step2.RunID)
 	}
+
 	if step2.Status != chain.StepCompleted {
 		t.Errorf("step 2 status: got %v, want %v", step2.Status, chain.StepCompleted)
 	}
@@ -404,6 +421,7 @@ Deployment successful!
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
+
 	fetcher := logs.NewGHFetcherWithExecutor(ghClient, mockExec)
 
 	// Fetch logs for step 1 (ci.yml run 5001)
@@ -418,6 +436,7 @@ Deployment successful!
 
 	// Verify CI log content
 	foundTestsPass := false
+
 	for _, step := range ciStepLogs {
 		for _, entry := range step.Entries {
 			if entry.Content == "All tests passed (42 tests)" {
@@ -425,6 +444,7 @@ Deployment successful!
 			}
 		}
 	}
+
 	if !foundTestsPass {
 		t.Error("expected to find 'All tests passed' in CI logs")
 	}
@@ -441,6 +461,7 @@ Deployment successful!
 
 	// Verify deployment log content
 	foundDeploySuccess := false
+
 	for _, step := range deployStepLogs {
 		for _, entry := range step.Entries {
 			if entry.Content == "Deployment successful!" {
@@ -448,6 +469,7 @@ Deployment successful!
 			}
 		}
 	}
+
 	if !foundDeploySuccess {
 		t.Error("expected to find 'Deployment successful!' in deploy logs")
 	}
@@ -461,6 +483,7 @@ Deployment successful!
 		{"deploy.yml", deployStepLogs},
 	} {
 		hasError := false
+
 		for _, step := range stepLogs.logs {
 			for _, entry := range step.Entries {
 				if entry.Level == logs.LogLevelError {
@@ -469,6 +492,7 @@ Deployment successful!
 				}
 			}
 		}
+
 		if hasError {
 			t.Errorf("%s: unexpected error entries in successful run", stepLogs.name)
 		}
@@ -480,6 +504,7 @@ Deployment successful!
 func TestIntegration_ChainWithErrorLogs(t *testing.T) {
 	mockExec := exec.NewMockExecutor()
 	runner.SetExecutor(mockExec)
+
 	defer runner.SetExecutor(nil)
 
 	// Step 1: ci.yml succeeds (runID 7001)
@@ -589,6 +614,7 @@ Deployment successful despite warnings
 	if step1 == nil {
 		t.Fatal("step 1 result is nil")
 	}
+
 	if step1.Status != chain.StepCompleted {
 		t.Errorf("step 1 status: got %v, want %v", step1.Status, chain.StepCompleted)
 	}
@@ -597,6 +623,7 @@ Deployment successful despite warnings
 	if step2 == nil {
 		t.Fatal("step 2 result is nil")
 	}
+
 	if step2.Status != chain.StepCompleted {
 		t.Errorf("step 2 status: got %v, want %v", step2.Status, chain.StepCompleted)
 	}
@@ -606,6 +633,7 @@ Deployment successful despite warnings
 	if err != nil {
 		t.Fatalf("failed to create GitHub client: %v", err)
 	}
+
 	fetcher := logs.NewGHFetcherWithExecutor(ghClient, mockExec)
 
 	// Fetch logs for deploy step
@@ -624,12 +652,15 @@ Deployment successful despite warnings
 		for _, entry := range step.Entries {
 			if entry.Level == logs.LogLevelWarning {
 				warningCount++
+
 				if entry.Content == "##[warning]Deprecation notice: API v1 will be sunset in 6 months" {
 					foundDeprecation = true
 				}
 			}
+
 			if entry.Level == logs.LogLevelError {
 				errorCount++
+
 				if entry.Content == "##[error]Non-critical error: Cache miss for dependency X" {
 					foundCacheMiss = true
 				}
@@ -655,6 +686,7 @@ Deployment successful despite warnings
 
 	// Verify successful step completes despite errors/warnings
 	foundSuccess := false
+
 	for _, step := range deployStepLogs {
 		for _, entry := range step.Entries {
 			if entry.Content == "Deployment successful despite warnings" {
@@ -662,6 +694,7 @@ Deployment successful despite warnings
 			}
 		}
 	}
+
 	if !foundSuccess {
 		t.Error("expected to find success message in logs")
 	}

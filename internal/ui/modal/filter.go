@@ -58,6 +58,7 @@ func NewFilterModal(title string, items []string, currentFilter string) *FilterM
 		},
 	}
 	m.updateMatches()
+
 	return m
 }
 
@@ -73,12 +74,14 @@ func (m *FilterModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.Enter):
 			m.done = true
+
 			return m, func() tea.Msg {
 				return FilterResultMsg{Value: m.input.Value()}
 			}
 		case key.Matches(msg, m.keys.Escape):
 			m.done = true
 			m.cancelled = true
+
 			return m, func() tea.Msg {
 				return FilterResultMsg{Cancelled: true}
 			}
@@ -88,6 +91,7 @@ func (m *FilterModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 	m.updateMatches()
+
 	return m, cmd
 }
 
@@ -103,14 +107,17 @@ func (m *FilterModal) View() string {
 	if len(m.matches) < maxPreview {
 		maxPreview = len(m.matches)
 	}
-	for i := 0; i < maxPreview; i++ {
+
+	for i := range maxPreview {
 		s += ui.NormalStyle.Render("  "+m.matches[i]) + "\n"
 	}
+
 	if len(m.matches) > 5 {
 		s += ui.SubtitleStyle.Render("  ...and " + strconv.Itoa(len(m.matches)-5) + " more")
 	}
 
 	s += "\n" + ui.HelpStyle.Render("[enter] apply  [esc] cancel")
+
 	return s
 }
 

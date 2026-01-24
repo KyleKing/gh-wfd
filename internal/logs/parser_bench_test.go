@@ -11,7 +11,7 @@ func BenchmarkParseLogOutput_SmallLog(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -22,7 +22,7 @@ func BenchmarkParseLogOutput_1kLines(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -33,7 +33,7 @@ func BenchmarkParseLogOutput_10kLines(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -44,7 +44,7 @@ func BenchmarkParseLogOutput_50kLines(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -56,7 +56,7 @@ func BenchmarkParseLogOutput_WithErrors(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -67,7 +67,7 @@ func BenchmarkParseLogOutput_Unicode(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -78,7 +78,7 @@ func BenchmarkParseLogOutput_ANSI(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -89,7 +89,7 @@ func BenchmarkParseLogOutput_MixedContent(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -100,7 +100,7 @@ func BenchmarkParseLogOutput_WithTimestamps(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }
@@ -112,7 +112,7 @@ func BenchmarkParseLogOutput_MultiStep(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ParseLogOutput(logContent, "test-step")
 	}
 }

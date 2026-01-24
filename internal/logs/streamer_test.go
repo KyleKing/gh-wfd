@@ -1,7 +1,7 @@
 package logs
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -132,6 +132,7 @@ func TestLogStreamer_detectNewLogs(t *testing.T) {
 				if !exists {
 					lastCount = 0
 				}
+
 				currentCount := len(originalStep.Entries)
 				expectedNewEntries := currentCount - lastCount
 
@@ -204,13 +205,14 @@ func TestLogStreamer_Creation(t *testing.T) {
 
 func makeEntries(count int) []LogEntry {
 	entries := make([]LogEntry, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		entries[i] = LogEntry{
 			Timestamp: time.Now(),
 			Content:   "test log line",
 			Level:     LogLevelInfo,
 		}
 	}
+
 	return entries
 }
 
@@ -220,6 +222,7 @@ func findStepByIndex(steps []*StepLogs, index int) *StepLogs {
 			return step
 		}
 	}
+
 	return nil
 }
 
@@ -291,6 +294,7 @@ func TestLogStreamer_RunCompletion(t *testing.T) {
 	streamer.Start()
 
 	var completionUpdate StreamUpdate
+
 	timeout := time.After(1 * time.Second)
 
 	for {
@@ -301,8 +305,10 @@ func TestLogStreamer_RunCompletion(t *testing.T) {
 				if completionUpdate.Status != "completed" {
 					t.Error("expected completion update before channel closed")
 				}
+
 				return
 			}
+
 			if update.Status == "completed" {
 				completionUpdate = update
 			}
@@ -358,7 +364,7 @@ func TestLogStreamer_ChannelFull(t *testing.T) {
 	// This tests the warning logging behavior
 
 	// Fill the channel completely
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		streamer.updates <- StreamUpdate{RunID: 12345}
 	}
 
@@ -382,7 +388,8 @@ func TestLogStreamer_ConcurrentStop(t *testing.T) {
 
 	// Call Stop from multiple goroutines
 	done := make(chan bool, 3)
-	for i := 0; i < 3; i++ {
+
+	for range 3 {
 		go func() {
 			streamer.Stop()
 			done <- true
@@ -390,7 +397,7 @@ func TestLogStreamer_ConcurrentStop(t *testing.T) {
 	}
 
 	// Wait for all goroutines
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		<-done
 	}
 
@@ -440,8 +447,9 @@ type errorMockClient struct {
 
 func (e *errorMockClient) GetWorkflowRun(runID int64) (*github.WorkflowRun, error) {
 	if e.errorOnGetRun {
-		return nil, fmt.Errorf("mock error: failed to get workflow run")
+		return nil, errors.New("mock error: failed to get workflow run")
 	}
+
 	return &github.WorkflowRun{
 		ID:     runID,
 		Status: "in_progress",
@@ -450,7 +458,8 @@ func (e *errorMockClient) GetWorkflowRun(runID int64) (*github.WorkflowRun, erro
 
 func (e *errorMockClient) GetWorkflowRunJobs(runID int64) ([]github.Job, error) {
 	if e.errorOnGetJobs {
-		return nil, fmt.Errorf("mock error: failed to get jobs")
+		return nil, errors.New("mock error: failed to get jobs")
 	}
+
 	return []github.Job{}, nil
 }

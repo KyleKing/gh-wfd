@@ -3,6 +3,7 @@ package logs
 import (
 	"bufio"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,6 +42,7 @@ func (f *GHFetcher) FetchStepLogsReal(runID int64, workflow string) ([]*StepLogs
 	}
 
 	var allStepLogs []*StepLogs
+
 	stepIndex := 0
 
 	for _, job := range jobs {
@@ -62,6 +64,7 @@ func (f *GHFetcher) FetchStepLogsReal(runID int64, workflow string) ([]*StepLogs
 				})
 				stepIndex++
 			}
+
 			continue
 		}
 
@@ -79,9 +82,9 @@ func (f *GHFetcher) fetchJobLogs(runID, jobID int64) (string, error) {
 	// Use gh CLI to view logs
 	// Command: gh run view <run-id> --log --job <job-id>
 	stdout, stderr, err := f.executor.Execute("gh", "run", "view",
-		fmt.Sprintf("%d", runID),
+		strconv.FormatInt(runID, 10),
 		"--log",
-		"--job", fmt.Sprintf("%d", jobID))
+		"--job", strconv.FormatInt(jobID, 10))
 
 	if err != nil {
 		return "", fmt.Errorf("gh command failed: %w (stderr: %s)", err, stderr)
@@ -106,11 +109,12 @@ func (f *GHFetcher) parseJobLogsIntoSteps(
 	// ##[group]Install dependencies
 	// ... log lines ...
 	// ##[endgroup]
-
 	var stepLogs []*StepLogs
+
 	scanner := bufio.NewScanner(strings.NewReader(rawLogs))
 
 	currentStepIdx := -1
+
 	var currentLines []string
 
 	for scanner.Scan() {
@@ -170,7 +174,7 @@ func (f *GHFetcher) FetchWorkflowLogs(runID int64) (string, error) {
 	// Use gh CLI to view all logs
 	// Command: gh run view <run-id> --log
 	stdout, stderr, err := f.executor.Execute("gh", "run", "view",
-		fmt.Sprintf("%d", runID),
+		strconv.FormatInt(runID, 10),
 		"--log")
 
 	if err != nil {

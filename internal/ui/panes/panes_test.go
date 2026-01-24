@@ -56,13 +56,15 @@ func testWorkflowWithInputs(name, filename string, inputs map[string]workflow.Wo
 
 func testManyInputsWorkflow() workflow.WorkflowFile {
 	inputs := make(map[string]workflow.WorkflowInput)
-	for i := 0; i < 15; i++ {
+
+	for i := range 15 {
 		name := fmt.Sprintf("input%02d", i)
 		inputs[name] = workflow.WorkflowInput{
 			Type:    "string",
 			Default: "",
 		}
 	}
+
 	return testWorkflowWithInputs("Many Inputs", "many.yml", inputs)
 }
 
@@ -88,6 +90,7 @@ func TestWorkflowModel_SelectedWorkflow(t *testing.T) {
 	if wf == nil {
 		t.Fatal("expected non-nil workflow")
 	}
+
 	if wf.Filename != "deploy.yml" {
 		t.Errorf("expected 'deploy.yml', got %q", wf.Filename)
 	}
@@ -118,6 +121,7 @@ func TestHistoryModel_SetEntries(t *testing.T) {
 	if entry == nil {
 		t.Fatal("expected non-nil entry")
 	}
+
 	if entry.Branch != "main" {
 		t.Errorf("expected branch 'main', got %q", entry.Branch)
 	}
@@ -159,10 +163,12 @@ func TestConfigModel_BuildCommand(t *testing.T) {
 
 	hasRef := false
 	hasEnv := false
+
 	for i, arg := range cmd {
 		if arg == "--ref" && i+1 < len(cmd) && cmd[i+1] == "main" {
 			hasRef = true
 		}
+
 		if arg == "-f" && i+1 < len(cmd) && cmd[i+1] == "environment=production" {
 			hasEnv = true
 		}
@@ -171,6 +177,7 @@ func TestConfigModel_BuildCommand(t *testing.T) {
 	if !hasRef {
 		t.Error("expected --ref main in command")
 	}
+
 	if !hasEnv {
 		t.Error("expected -f environment=production in command")
 	}
@@ -184,11 +191,13 @@ func TestConfigModel_ToggleWatchRun(t *testing.T) {
 	}
 
 	m.ToggleWatchRun()
+
 	if !m.WatchRun() {
 		t.Error("expected watchRun to be true after toggle")
 	}
 
 	m.ToggleWatchRun()
+
 	if m.WatchRun() {
 		t.Error("expected watchRun to be false after second toggle")
 	}
@@ -197,6 +206,7 @@ func TestConfigModel_ToggleWatchRun(t *testing.T) {
 func TestConfigModel_SelectUpDown_Boundaries(t *testing.T) {
 	m := NewConfigModel()
 	m.SetSize(80, 30)
+
 	wf := testManyInputsWorkflow()
 	m.SetWorkflow(&wf)
 
@@ -205,16 +215,18 @@ func TestConfigModel_SelectUpDown_Boundaries(t *testing.T) {
 	}
 
 	m.SelectDown()
+
 	if m.selectedRow != 0 {
 		t.Errorf("expected selectedRow = 0 after first SelectDown, got %d", m.selectedRow)
 	}
 
 	m.SelectUp()
+
 	if m.selectedRow != 0 {
 		t.Errorf("expected selectedRow = 0 at top boundary, got %d", m.selectedRow)
 	}
 
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		m.SelectDown()
 	}
 
@@ -224,6 +236,7 @@ func TestConfigModel_SelectUpDown_Boundaries(t *testing.T) {
 	}
 
 	m.SelectDown()
+
 	if m.selectedRow != maxIdx {
 		t.Errorf("expected selectedRow = %d to stay at bottom, got %d", maxIdx, m.selectedRow)
 	}
@@ -266,6 +279,7 @@ func TestConfigModel_SetFilter_FuzzyMatching(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m := NewConfigModel()
 			m.SetSize(80, 30)
+
 			wf := testManyInputsWorkflow()
 			m.SetWorkflow(&wf)
 			m.selectedRow = 5
@@ -300,6 +314,7 @@ func TestConfigModel_GetModifiedInputs(t *testing.T) {
 	}
 
 	m.SetInput("environment", "production")
+
 	modified = m.GetModifiedInputs()
 	if len(modified) != 1 {
 		t.Errorf("expected 1 modification, got %d", len(modified))
@@ -310,6 +325,7 @@ func TestConfigModel_GetModifiedInputs(t *testing.T) {
 	}
 
 	m.SetInput("dry_run", "false")
+
 	modified = m.GetModifiedInputs()
 	if len(modified) != 1 {
 		t.Errorf("expected 1 modification (dry_run unchanged), got %d", len(modified))
@@ -364,6 +380,7 @@ func TestConfigModel_BuildCommand_EdgeCases(t *testing.T) {
 			cmdStr := fmt.Sprintf("%v", cmd)
 
 			hasRef := false
+
 			for i, arg := range cmd {
 				if arg == "--ref" && i+1 < len(cmd) {
 					hasRef = true
@@ -377,12 +394,14 @@ func TestConfigModel_BuildCommand_EdgeCases(t *testing.T) {
 
 			if tt.expectInput != "" {
 				found := false
+
 				for _, arg := range cmd {
 					if arg == tt.expectInput {
 						found = true
 						break
 					}
 				}
+
 				if !found {
 					t.Errorf("expected input %q in command: %s", tt.expectInput, cmdStr)
 				}
@@ -407,6 +426,7 @@ func TestConfigModel_SetInputs_Nil(t *testing.T) {
 func TestConfigModel_SelectedInput_EdgeCases(t *testing.T) {
 	m := NewConfigModel()
 	m.SetSize(80, 30)
+
 	wf := testManyInputsWorkflow()
 	m.SetWorkflow(&wf)
 
@@ -421,6 +441,7 @@ func TestConfigModel_SelectedInput_EdgeCases(t *testing.T) {
 	}
 
 	m.SetFilter("xyz")
+
 	m.selectedRow = 0
 	if selected := m.SelectedInput(); selected != "" {
 		t.Errorf("expected empty string for empty filtered list, got %q", selected)
@@ -495,6 +516,7 @@ func TestFormatTimeAgo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testTime := now.Add(-tt.timeAgo)
+
 			result := formatTimeAgo(testTime)
 			if result != tt.expected {
 				t.Errorf("formatTimeAgo() = %q, want %q", result, tt.expected)
@@ -516,10 +538,10 @@ func TestHistoryModel_SetEntries_Empty(t *testing.T) {
 
 func TestWorkflowItem_Title_NoName(t *testing.T) {
 	tests := []struct {
-		name         string
-		wf           workflow.WorkflowFile
-		expectTitle  string
-		expectDesc   string
+		name        string
+		wf          workflow.WorkflowFile
+		expectTitle string
+		expectDesc  string
 	}{
 		{
 			name: "name and filename",
@@ -578,6 +600,7 @@ func findSubstring(s, substr string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -601,21 +624,25 @@ func TestTabbedRightModel_TabSwitching(t *testing.T) {
 	}
 
 	m.NextTab()
+
 	if m.ActiveTab() != TabChains {
 		t.Error("expected TabChains after NextTab")
 	}
 
 	m.NextTab()
+
 	if m.ActiveTab() != TabLive {
 		t.Error("expected TabLive after second NextTab")
 	}
 
 	m.NextTab()
+
 	if m.ActiveTab() != TabHistory {
 		t.Error("expected TabHistory after third NextTab (wrap around)")
 	}
 
 	m.PrevTab()
+
 	if m.ActiveTab() != TabLive {
 		t.Error("expected TabLive after PrevTab")
 	}
@@ -645,6 +672,7 @@ func TestTabbedRightModel_SetHistoryEntries(t *testing.T) {
 	if entry == nil {
 		t.Fatal("expected non-nil entry")
 	}
+
 	if entry.Workflow != "test.yml" {
 		t.Errorf("expected workflow 'test.yml', got %q", entry.Workflow)
 	}
@@ -668,9 +696,11 @@ func TestTabbedRightModel_SetChains(t *testing.T) {
 	if !ok {
 		t.Fatal("expected chain to be selected")
 	}
+
 	if name != "deploy" {
 		t.Errorf("expected chain name 'deploy', got %q", name)
 	}
+
 	if chain.Description != "Deploy to prod" {
 		t.Errorf("expected description 'Deploy to prod', got %q", chain.Description)
 	}
@@ -685,9 +715,11 @@ func TestTabbedRightModel_ViewRendering(t *testing.T) {
 	if !findSubstring(view, "History") {
 		t.Error("view should contain History tab")
 	}
+
 	if !findSubstring(view, "Chains") {
 		t.Error("view should contain Chains tab")
 	}
+
 	if !findSubstring(view, "Live") {
 		t.Error("view should contain Live tab")
 	}
@@ -727,6 +759,7 @@ func TestLiveRunsModel_SetRuns(t *testing.T) {
 	if !ok {
 		t.Fatal("expected selected run")
 	}
+
 	if run.RunID != 1 {
 		t.Errorf("expected first run selected, got ID %d", run.RunID)
 	}
@@ -748,27 +781,32 @@ func TestLiveRunsModel_Navigation(t *testing.T) {
 	}
 
 	m.MoveDown()
+
 	if m.SelectedIndex() != 1 {
 		t.Errorf("expected index 1 after MoveDown, got %d", m.SelectedIndex())
 	}
 
 	m.MoveDown()
+
 	if m.SelectedIndex() != 2 {
 		t.Errorf("expected index 2 after second MoveDown, got %d", m.SelectedIndex())
 	}
 
 	m.MoveDown()
+
 	if m.SelectedIndex() != 2 {
 		t.Error("expected index to stay at 2 at boundary")
 	}
 
 	m.MoveUp()
+
 	if m.SelectedIndex() != 1 {
 		t.Errorf("expected index 1 after MoveUp, got %d", m.SelectedIndex())
 	}
 
 	m.MoveUp()
 	m.MoveUp()
+
 	if m.SelectedIndex() != 0 {
 		t.Error("expected index to stay at 0 at upper boundary")
 	}
@@ -883,6 +921,7 @@ func TestChainListModel_SetChains(t *testing.T) {
 	if !ok {
 		t.Fatal("expected chain to be selected")
 	}
+
 	if name != "alpha" {
 		t.Errorf("expected first chain alphabetically 'alpha', got %q", name)
 	}
@@ -905,24 +944,28 @@ func TestChainListModel_Navigation(t *testing.T) {
 	}
 
 	m.MoveDown()
+
 	name, _, _ = m.SelectedChain()
 	if name != "beta" {
 		t.Errorf("expected 'beta', got %q", name)
 	}
 
 	m.MoveDown()
+
 	name, _, _ = m.SelectedChain()
 	if name != "gamma" {
 		t.Errorf("expected 'gamma', got %q", name)
 	}
 
 	m.MoveDown()
+
 	name, _, _ = m.SelectedChain()
 	if name != "gamma" {
 		t.Error("expected to stay at 'gamma' at boundary")
 	}
 
 	m.MoveUp()
+
 	name, _, _ = m.SelectedChain()
 	if name != "beta" {
 		t.Errorf("expected 'beta', got %q", name)
@@ -930,6 +973,7 @@ func TestChainListModel_Navigation(t *testing.T) {
 
 	m.MoveUp()
 	m.MoveUp()
+
 	name, _, _ = m.SelectedChain()
 	if name != "alpha" {
 		t.Error("expected to stay at 'alpha' at upper boundary")
@@ -963,6 +1007,7 @@ func TestChainListModel_ViewWithChains(t *testing.T) {
 	if !findSubstring(view, "deploy") {
 		t.Error("view should contain chain name")
 	}
+
 	if !findSubstring(view, "Deploy to prod") {
 		t.Error("view should contain description")
 	}
@@ -977,6 +1022,7 @@ func TestChainListModel_FocusState(t *testing.T) {
 	}
 
 	m.SetFocused(false)
+
 	if m.focused {
 		t.Error("expected focused to be false")
 	}

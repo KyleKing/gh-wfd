@@ -66,9 +66,11 @@ func (rl *RunLogs) AddStep(stepLogs *StepLogs) {
 func (rl *RunLogs) GetStep(idx int) *StepLogs {
 	rl.mu.RLock()
 	defer rl.mu.RUnlock()
+
 	if idx >= 0 && idx < len(rl.Steps) {
 		return rl.Steps[idx]
 	}
+
 	return nil
 }
 
@@ -78,6 +80,7 @@ func (rl *RunLogs) AllSteps() []*StepLogs {
 	defer rl.mu.RUnlock()
 	steps := make([]*StepLogs, len(rl.Steps))
 	copy(steps, rl.Steps)
+
 	return steps
 }
 

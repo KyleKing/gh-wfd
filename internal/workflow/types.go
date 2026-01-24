@@ -34,6 +34,7 @@ func (i WorkflowInput) InputType() string {
 	if i.Type == "" {
 		return "string"
 	}
+
 	return i.Type
 }
 
@@ -47,5 +48,6 @@ func (w WorkflowFile) GetInputs() map[string]WorkflowInput {
 	if w.On.WorkflowDispatch == nil || w.On.WorkflowDispatch.Inputs == nil {
 		return make(map[string]WorkflowInput)
 	}
+
 	return w.On.WorkflowDispatch.Inputs
 }

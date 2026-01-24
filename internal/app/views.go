@@ -28,6 +28,7 @@ func (m Model) View() string {
 	leftWidth := (m.width * 11) / 30
 
 	var leftPane string
+
 	switch m.viewMode {
 	case InputDetailMode:
 		if m.getSelectedInputName() != "" {
@@ -131,12 +132,14 @@ func (m Model) viewInputDetailsPane(width, height int) string {
 
 	wf := m.workflows[m.selectedWorkflow]
 	inputs := wf.GetInputs()
+
 	input, ok := inputs[selectedName]
 	if !ok {
 		return m.viewWorkflowPane(width, height)
 	}
 
 	var content strings.Builder
+
 	content.WriteString(ui.TitleStyle.Render(m.leftPaneTitle()))
 	content.WriteString("\n\n")
 
@@ -154,10 +157,12 @@ func (m Model) viewInputDetailsPane(width, height int) string {
 
 func _renderInputHeader(content *strings.Builder, name string, required bool) {
 	content.WriteString(ui.TitleStyle.Render(name))
+
 	if required {
 		content.WriteString(" ")
 		content.WriteString(ui.SelectedStyle.Render("(required)"))
 	}
+
 	content.WriteString("\n\n")
 }
 
@@ -171,9 +176,11 @@ func _renderInputOptions(content *strings.Builder, inputType string, options []s
 	if inputType != "choice" || len(options) == 0 {
 		return
 	}
+
 	content.WriteString("\n")
 	content.WriteString(ui.SubtitleStyle.Render("Options:"))
 	content.WriteString("\n")
+
 	for _, opt := range options {
 		content.WriteString("  - ")
 		content.WriteString(ui.NormalStyle.Render(opt))
@@ -185,9 +192,11 @@ func _renderInputDescription(content *strings.Builder, description string, width
 	if description == "" {
 		return
 	}
+
 	content.WriteString("\n")
 	content.WriteString(ui.SubtitleStyle.Render("Description:"))
 	content.WriteString("\n")
+
 	wrapped := _wordWrap(description, width-8)
 	content.WriteString(ui.NormalStyle.Render(wrapped))
 	content.WriteString("\n")
@@ -219,6 +228,7 @@ func (m Model) viewWorkflowPane(width, height int) string {
 
 	title := ui.TitleStyle.Render(m.leftPaneTitle())
 	maxLineWidth := width - 8
+
 	var content string
 
 	allLine := "all"
@@ -227,6 +237,7 @@ func (m Model) viewWorkflowPane(width, height int) string {
 	} else {
 		content += ui.TableDefaultStyle.Render("  " + allLine)
 	}
+
 	if len(m.workflows) > 0 {
 		content += "\n"
 	}
@@ -236,15 +247,18 @@ func (m Model) viewWorkflowPane(width, height int) string {
 		if name == "" {
 			name = wf.Filename
 		}
+
 		line := name
 		if len(line) > maxLineWidth {
 			line = line[:maxLineWidth-3] + "..."
 		}
+
 		if i == m.selectedWorkflow {
 			content += ui.SelectedStyle.Render("> " + line)
 		} else {
 			content += ui.NormalStyle.Render("  " + line)
 		}
+
 		if i < len(m.workflows)-1 {
 			content += "\n"
 		}
@@ -257,6 +271,7 @@ func (m Model) viewHistoryConfigPane(width, height int) string {
 	style := ui.PaneStyle(width, height, m.focused == PaneWorkflows)
 
 	var content strings.Builder
+
 	content.WriteString(ui.TitleStyle.Render(m.leftPaneTitle()))
 	content.WriteString("\n\n")
 
@@ -291,6 +306,7 @@ func (m Model) viewHistoryConfigPane(width, height int) string {
 	} else {
 		content.WriteString(ui.SubtitleStyle.Render("Inputs:"))
 		content.WriteString("\n")
+
 		for k, v := range entry.Inputs {
 			content.WriteString("  ")
 
@@ -301,6 +317,7 @@ func (m Model) viewHistoryConfigPane(width, height int) string {
 				content.WriteString(ui.TableDefaultStyle.Render(ui.FormatEmptyValue(v)))
 				content.WriteString(" ")
 				content.WriteString(ui.SubtitleStyle.Render("("))
+
 				switch err.Status {
 				case validation.StatusMissing:
 					content.WriteString(ui.SubtitleStyle.Render("missing"))
@@ -309,17 +326,20 @@ func (m Model) viewHistoryConfigPane(width, height int) string {
 				case validation.StatusOptionsChanged:
 					content.WriteString(ui.SubtitleStyle.Render("invalid option"))
 				}
+
 				content.WriteString(ui.SubtitleStyle.Render(")"))
 			} else {
 				content.WriteString(ui.NormalStyle.Render(k))
 				content.WriteString(": ")
 				content.WriteString(ui.RenderEmptyValue(v))
 			}
+
 			content.WriteString("\n")
 		}
 	}
 
 	content.WriteString("\n")
+
 	if len(validationErrors) > 0 {
 		content.WriteString(ui.HelpStyle.Render("[Enter] apply & run  [a] remap  [Esc] back"))
 	} else {
@@ -333,6 +353,7 @@ func (m Model) viewConfigPane(width, height int) string {
 	style := ui.PaneStyle(width, height, m.focused == PaneConfig)
 
 	var content strings.Builder
+
 	content.WriteString(ui.TitleStyle.Render("Configuration"))
 	content.WriteString("\n\n")
 
@@ -345,16 +366,19 @@ func (m Model) viewConfigPane(width, height int) string {
 	if branch == "" {
 		branch = "(not set)"
 	}
+
 	content.WriteString(ui.TitleStyle.Render("Branch"))
 	content.WriteString(": [b] ")
 	content.WriteString(branch)
 
 	content.WriteString("    Watch: [w] ")
+
 	if m.watchRun {
 		content.WriteString("on")
 	} else {
 		content.WriteString("off")
 	}
+
 	content.WriteString("    [r] reset all")
 	content.WriteString("\n")
 
@@ -371,11 +395,14 @@ func (m Model) viewConfigPane(width, height int) string {
 	content.WriteString("\n\n")
 	content.WriteString(ui.SubtitleStyle.Render("Command ([c] copy):"))
 	content.WriteString("\n")
+
 	cliCmd := m.buildCLIString()
 	maxCmdWidth := width - 10
+
 	if maxCmdWidth > 0 && len(cliCmd) > maxCmdWidth {
 		cliCmd = "..." + cliCmd[len(cliCmd)-maxCmdWidth+3:]
 	}
+
 	content.WriteString(ui.CLIPreviewStyle.Render(cliCmd))
 
 	return style.Render(content.String())
@@ -396,6 +423,7 @@ func (m Model) renderTableRows(height int) string {
 
 	wf := m.workflows[m.selectedWorkflow]
 	wfInputs := wf.GetInputs()
+
 	visibleRows := height - TableHeaderHeight
 	if visibleRows < 1 {
 		visibleRows = 5
@@ -455,6 +483,7 @@ func (m Model) renderTableRows(height int) string {
 		}
 
 		rows.WriteString(rowStyle.Render(row))
+
 		if i < visibleEnd-1 {
 			rows.WriteString("\n")
 		}

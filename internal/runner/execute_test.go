@@ -222,6 +222,7 @@ func (m *mockCommandExecutor) Execute(name string, args ...string) error {
 	}
 
 	m.commandCounter++
+
 	return nil
 }
 
@@ -235,6 +236,7 @@ func (m *mockGitHubClient) GetLatestRun(_ string) (*github.WorkflowRun, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
+
 	return m.run, nil
 }
 
@@ -248,6 +250,7 @@ func (m *mockRepositoryDetector) Current() (Repository, error) {
 	if m.err != nil {
 		return Repository{}, m.err
 	}
+
 	return m.repo, nil
 }
 
@@ -500,6 +503,7 @@ func TestWatchLatestRunWithExecutor(t *testing.T) {
 				if cmd.name != "gh" {
 					t.Errorf("watchLatestRunWithExecutor() command name = %q, want %q", cmd.name, "gh")
 				}
+
 				if len(cmd.args) != 2 || cmd.args[0] != "run" || cmd.args[1] != "watch" {
 					t.Errorf("watchLatestRunWithExecutor() args = %v, want [run watch]", cmd.args)
 				}

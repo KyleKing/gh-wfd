@@ -119,6 +119,7 @@ func (m TabbedRightModel) Update(msg tea.Msg) (TabbedRightModel, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
+
 	switch m.activeTab {
 	case TabHistory:
 		m.history, cmd = m.history.Update(msg)
@@ -127,6 +128,7 @@ func (m TabbedRightModel) Update(msg tea.Msg) (TabbedRightModel, tea.Cmd) {
 	case TabLive:
 		m.live, cmd = m.live.Update(msg)
 	}
+
 	return m, cmd
 }
 
@@ -137,6 +139,7 @@ func (m TabbedRightModel) View() string {
 	tabs := m.renderTabHeader()
 
 	var content string
+
 	switch m.activeTab {
 	case TabHistory:
 		content = m.history.ViewContent()
@@ -160,6 +163,7 @@ func (m TabbedRightModel) renderTabHeader() string {
 	}
 
 	var parts []string
+
 	for _, t := range tabs {
 		if t.tab == m.activeTab {
 			parts = append(parts, ui.SelectedStyle.Render("["+t.name+"]"))
@@ -167,6 +171,7 @@ func (m TabbedRightModel) renderTabHeader() string {
 			parts = append(parts, ui.SubtitleStyle.Render(" "+t.name+" "))
 		}
 	}
+
 	return strings.Join(parts, " ")
 }
 

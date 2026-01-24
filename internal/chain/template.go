@@ -71,26 +71,34 @@ func parseStepIndex(s string, n *int) bool {
 	if len(s) == 0 {
 		return false
 	}
+
 	num := 0
+
 	for _, c := range s {
 		if c < '0' || c > '9' {
 			return false
 		}
+
 		num = num*10 + int(c-'0')
 	}
+
 	*n = num
+
 	return true
 }
 
 // InterpolateInputs interpolates all values in an input map.
 func InterpolateInputs(inputs map[string]string, ctx *InterpolationContext) (map[string]string, error) {
 	result := make(map[string]string, len(inputs))
+
 	for key, value := range inputs {
 		interpolated, err := Interpolate(value, ctx)
 		if err != nil {
 			return nil, err
 		}
+
 		result[key] = interpolated
 	}
+
 	return result, nil
 }

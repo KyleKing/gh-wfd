@@ -103,6 +103,7 @@ func TestRunLogs_AllSteps(t *testing.T) {
 
 	// Verify it's a copy by checking we can modify it without affecting original
 	originalLen := len(rl.Steps)
+
 	steps = append(steps, &StepLogs{StepName: "new"})
 
 	if len(rl.Steps) != originalLen {
@@ -115,15 +116,18 @@ func TestRunLogs_ConcurrentAccess(t *testing.T) {
 
 	// Launch multiple goroutines adding steps concurrently
 	const numGoroutines = 10
+
 	const stepsPerGoroutine = 5
 
 	var wg sync.WaitGroup
+
 	wg.Add(numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer wg.Done()
-			for j := 0; j < stepsPerGoroutine; j++ {
+
+			for j := range stepsPerGoroutine {
 				step := &StepLogs{
 					StepIndex: id*stepsPerGoroutine + j,
 					StepName:  "step",
@@ -134,10 +138,11 @@ func TestRunLogs_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Concurrent reads
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < stepsPerGoroutine; j++ {
+
+			for j := range stepsPerGoroutine {
 				rl.GetStep(j)
 				rl.AllSteps()
 			}

@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -27,12 +28,12 @@ const (
 type StepStatus string
 
 const (
-	StepPending    StepStatus = "pending"
-	StepRunning    StepStatus = "running"
-	StepWaiting    StepStatus = "waiting"
-	StepCompleted  StepStatus = "completed"
-	StepFailed     StepStatus = "failed"
-	StepSkipped    StepStatus = "skipped"
+	StepPending   StepStatus = "pending"
+	StepRunning   StepStatus = "running"
+	StepWaiting   StepStatus = "waiting"
+	StepCompleted StepStatus = "completed"
+	StepFailed    StepStatus = "failed"
+	StepSkipped   StepStatus = "skipped"
 )
 
 // StepResult represents the result of a completed step.
@@ -120,15 +121,17 @@ func NewExecutorFromHistory(
 	stepStatuses := make([]StepStatus, len(chain.Steps))
 	stepResults := make(map[int]*StepResult)
 
-	for i := 0; i < len(chain.Steps); i++ {
+	for i := range len(chain.Steps) {
 		if i < resumeFromStep && i < len(previousResults) {
 			prev := previousResults[i]
 			status := StepCompleted
+
 			if prev.Status == "failed" || prev.Conclusion == "failure" {
 				status = StepFailed
 			} else if prev.Status == "skipped" {
 				status = StepSkipped
 			}
+
 			stepStatuses[i] = status
 			stepResults[i] = &StepResult{
 				Workflow:   prev.Workflow,
@@ -167,6 +170,7 @@ func (e *ChainExecutor) Start(variables map[string]string, branch string) error 
 	e.mu.Unlock()
 
 	go e.runChain()
+
 	return nil
 }
 
@@ -174,6 +178,7 @@ func (e *ChainExecutor) Start(variables map[string]string, branch string) error 
 func (e *ChainExecutor) State() ChainState {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
+
 	return *e.state
 }
 
@@ -209,9 +214,11 @@ func (e *ChainExecutor) runChain() {
 		result, err := e.runStep(i, step)
 		if err != nil {
 			e.handleStepError(i, step, err)
+
 			if e.state.Status == ChainFailed {
 				return
 			}
+
 			continue
 		}
 
@@ -264,6 +271,7 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 		if e.branch != "" {
 			suggestion = fmt.Sprintf("Verify workflow %q exists and supports workflow_dispatch on branch %q", step.Workflow, e.branch)
 		}
+
 		return nil, &chainerr.StepDispatchError{
 			Workflow:   step.Workflow,
 			Branch:     e.branch,
@@ -276,6 +284,7 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 
 	run, _ := e.client.GetWorkflowRun(runID)
 	runURL := ""
+
 	if run != nil {
 		runURL = run.HTMLURL
 	}
@@ -299,6 +308,7 @@ func (e *ChainExecutor) runStep(idx int, step config.ChainStep) (*StepResult, er
 	if waitRunURL != "" {
 		runURL = waitRunURL
 	}
+
 	if err != nil {
 		return nil, &chainerr.StepExecutionError{
 			StepIndex: idx,
@@ -331,7 +341,7 @@ func (e *ChainExecutor) waitForRun(runID int64, waitFor config.WaitCondition) (c
 	for {
 		select {
 		case <-e.stopCh:
-			return "", "", fmt.Errorf("chain execution stopped")
+			return "", "", errors.New("chain execution stopped")
 		case <-ticker.C:
 			run, pollErr := e.client.GetWorkflowRun(runID)
 			if pollErr != nil {
@@ -376,6 +386,7 @@ func (e *ChainExecutor) handleStepFailure(idx int, step config.ChainStep) bool {
 	case config.FailureSkip, config.FailureContinue:
 		return true
 	}
+
 	return false
 }
 

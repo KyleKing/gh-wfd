@@ -92,17 +92,21 @@ func (m *ChainStatusModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Stop):
 			m.stopped = true
 			m.done = true
+
 			return m, func() tea.Msg {
 				return ChainStatusStopMsg{}
 			}
 		case key.Matches(msg, m.keys.Copy):
 			script := m.buildBashScript()
 			clipboard.WriteAll(script)
+
 			m.copied = true
+
 			return m, nil
 		case key.Matches(msg, m.keys.ViewLogs):
 			if m.state.Status == chain.ChainCompleted || m.state.Status == chain.ChainFailed {
 				errorsOnly := m.state.Status == chain.ChainFailed
+
 				return m, func() tea.Msg {
 					return ChainStatusViewLogsMsg{
 						State:      m.state,
@@ -117,11 +121,13 @@ func (m *ChainStatusModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			}
 		}
 	}
+
 	return m, nil
 }
 
 func (m *ChainStatusModal) buildBashScript() string {
 	var sb strings.Builder
+
 	sb.WriteString("#!/bin/bash\n")
 	sb.WriteString("# Chain: ")
 	sb.WriteString(m.state.ChainName)
@@ -142,14 +148,16 @@ func (m *ChainStatusModal) buildBashScript() string {
 func (m *ChainStatusModal) View() string {
 	var s strings.Builder
 
-	s.WriteString(ui.TitleStyle.Render(fmt.Sprintf("Chain: %s", m.state.ChainName)))
+	s.WriteString(ui.TitleStyle.Render("Chain: " + m.state.ChainName))
 	s.WriteString("\n\n")
 
 	s.WriteString(ui.SubtitleStyle.Render(fmt.Sprintf("Status: %s", m.state.Status)))
+
 	if m.branch != "" {
 		s.WriteString("  ")
 		s.WriteString(ui.TableDimmedStyle.Render(fmt.Sprintf("(branch: %s)", m.branch)))
 	}
+
 	s.WriteString("\n\n")
 
 	s.WriteString(ui.SubtitleStyle.Render("Steps:"))
@@ -157,6 +165,7 @@ func (m *ChainStatusModal) View() string {
 
 	for i, status := range m.state.StepStatuses {
 		icon := stepStatusIcon(status)
+
 		prefix := "  "
 		if i == m.state.CurrentStep && m.state.Status == chain.ChainRunning {
 			prefix = "> "
@@ -176,6 +185,7 @@ func (m *ChainStatusModal) View() string {
 		} else {
 			s.WriteString(line)
 		}
+
 		s.WriteString("\n")
 
 		if i < len(m.commands) && m.commands[i] != "" {
@@ -212,6 +222,7 @@ func (m *ChainStatusModal) View() string {
 	}
 
 	hasFailedURL := m.GetFailedStepRunURL() != ""
+
 	if m.state.Status == chain.ChainRunning {
 		s.WriteString(ui.HelpStyle.Render("[esc/q] close (continues)  [C-c] stop  [c] copy script"))
 	} else if m.state.Status == chain.ChainFailed && hasFailedURL {
@@ -253,6 +264,7 @@ func (m *ChainStatusModal) GetFailedStepRunURL() string {
 			return result.RunURL
 		}
 	}
+
 	return ""
 }
 
@@ -263,6 +275,7 @@ func (m *ChainStatusModal) GetDetailedError() string {
 	}
 
 	var sb strings.Builder
+
 	sb.WriteString(m.state.Error.Error())
 
 	if url := chainerr.GetRunURL(m.state.Error); url != "" {

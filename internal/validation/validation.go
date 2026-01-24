@@ -34,6 +34,7 @@ func ValidateHistoryConfig(entry *frecency.HistoryEntry, wf *workflow.WorkflowFi
 	}
 
 	var errors []ConfigValidationError
+
 	currentInputs := wf.GetInputs()
 
 	for historicalName, historicalValue := range entry.Inputs {
@@ -48,6 +49,7 @@ func ValidateHistoryConfig(entry *frecency.HistoryEntry, wf *workflow.WorkflowFi
 				Status:          StatusMissing,
 				Suggestion:      suggestion,
 			})
+
 			continue
 		}
 
@@ -65,12 +67,14 @@ func validateInputValue(name, value string, input workflow.WorkflowInput) *Confi
 	// For choice inputs, validate that the value is still in the options
 	if input.Type == "choice" && len(input.Options) > 0 {
 		validOption := false
+
 		for _, option := range input.Options {
 			if value == option {
 				validOption = true
 				break
 			}
 		}
+
 		if !validOption {
 			return &ConfigValidationError{
 				HistoricalName:  name,
@@ -98,6 +102,7 @@ func findBestMatch(historicalName string, currentInputs map[string]workflow.Work
 	for name := range currentInputs {
 		names = append(names, name)
 	}
+
 	sort.Strings(names)
 
 	// Use fuzzy matching to find similar names

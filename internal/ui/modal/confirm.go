@@ -65,18 +65,21 @@ func (m *ConfirmModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Yes):
 			m.result = true
 			m.done = true
+
 			return m, func() tea.Msg {
 				return ConfirmResultMsg{Value: true}
 			}
 		case key.Matches(msg, m.keys.No):
 			m.result = false
 			m.done = true
+
 			return m, func() tea.Msg {
 				return ConfirmResultMsg{Value: false}
 			}
 		case key.Matches(msg, m.keys.Enter):
 			m.result = m.selected
 			m.done = true
+
 			return m, func() tea.Msg {
 				return ConfirmResultMsg{Value: m.result}
 			}
@@ -85,6 +88,7 @@ func (m *ConfirmModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			return m, nil
 		}
 	}
+
 	return m, nil
 }
 
@@ -94,10 +98,12 @@ func (m *ConfirmModal) View() string {
 	if m.description != "" {
 		s += ui.SubtitleStyle.Render(m.description) + "\n"
 	}
+
 	s += "\n"
 
 	yesStyle := ui.NormalStyle
 	noStyle := ui.NormalStyle
+
 	if m.selected {
 		yesStyle = ui.SelectedStyle
 	} else {
@@ -106,6 +112,7 @@ func (m *ConfirmModal) View() string {
 
 	s += "  " + yesStyle.Render("[ Yes ]") + "  " + noStyle.Render("[ No ]")
 	s += "\n\n" + ui.HelpStyle.Render("[←→] select  [y/n] quick  [ctrl+r] default  [enter] confirm  [esc] cancel")
+
 	return s
 }
 

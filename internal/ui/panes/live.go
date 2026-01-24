@@ -61,6 +61,7 @@ func (m LiveRunsModel) SelectedRun() (watcher.WatchedRun, bool) {
 	if len(m.runs) == 0 || m.selectedIndex >= len(m.runs) {
 		return watcher.WatchedRun{}, false
 	}
+
 	return m.runs[m.selectedIndex], true
 }
 
@@ -83,6 +84,7 @@ func (m LiveRunsModel) Update(msg tea.Msg) (LiveRunsModel, tea.Cmd) {
 func (m LiveRunsModel) ViewContent() string {
 	if len(m.runs) == 0 {
 		var content strings.Builder
+
 		content.WriteString(ui.SubtitleStyle.Render("No active runs"))
 		content.WriteString("\n\n")
 		content.WriteString(ui.NormalStyle.Render("Runs appear here when"))
@@ -90,6 +92,7 @@ func (m LiveRunsModel) ViewContent() string {
 		content.WriteString(ui.NormalStyle.Render("Watch is enabled."))
 		content.WriteString("\n\n")
 		content.WriteString(ui.HelpStyle.Render("Toggle with [w] in config"))
+
 		return content.String()
 	}
 
@@ -125,10 +128,12 @@ func (m LiveRunsModel) ViewContent() string {
 		}
 
 		content.WriteString(rowStyle.Render(row))
+
 		if i < len(m.runs)-1 {
 			content.WriteString("\n")
 		}
 	}
+
 	return content.String()
 }
 
@@ -136,6 +141,7 @@ func (m LiveRunsModel) ViewContent() string {
 func (m LiveRunsModel) View() string {
 	style := ui.PaneStyle(m.width, m.height, m.focused)
 	title := ui.TitleStyle.Render("Live Runs")
+
 	return style.Render(title + "\n" + m.ViewContent())
 }
 
@@ -164,10 +170,12 @@ func runStatusIcon(status, conclusion string) string {
 // ActiveCount returns the number of active runs.
 func (m LiveRunsModel) ActiveCount() int {
 	count := 0
+
 	for _, run := range m.runs {
 		if run.IsActive() {
 			count++
 		}
 	}
+
 	return count
 }

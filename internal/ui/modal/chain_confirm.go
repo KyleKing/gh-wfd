@@ -62,6 +62,7 @@ func NewChainConfirmModal(chainName string, chainDef *config.Chain, variables ma
 		},
 	}
 	m.resolveSteps()
+
 	return m
 }
 
@@ -116,17 +117,20 @@ func (m *ChainConfirmModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 				Branch:    m.branch,
 				Watch:     m.watchMode,
 			}
+
 			return m, func() tea.Msg {
 				return m.result
 			}
 		case key.Matches(msg, m.keys.Cancel):
 			m.done = true
 			m.result = ChainConfirmResultMsg{Confirmed: false}
+
 			return m, func() tea.Msg {
 				return m.result
 			}
 		}
 	}
+
 	return m, nil
 }
 
@@ -148,10 +152,12 @@ func (m *ChainConfirmModal) View() string {
 	}
 
 	s.WriteString(ui.SubtitleStyle.Render("Branch: "))
+
 	branch := m.branch
 	if branch == "" {
 		branch = "(default)"
 	}
+
 	s.WriteString(ui.TableDimmedStyle.Render(branch))
 	s.WriteString("\n\n")
 
@@ -163,6 +169,7 @@ func (m *ChainConfirmModal) View() string {
 		for k := range m.variables {
 			keys = append(keys, k)
 		}
+
 		sort.Strings(keys)
 
 		for _, k := range keys {
@@ -171,6 +178,7 @@ func (m *ChainConfirmModal) View() string {
 			s.WriteString(ui.TableDimmedStyle.Render(v))
 			s.WriteString("\n")
 		}
+
 		s.WriteString("\n")
 	}
 
@@ -181,6 +189,7 @@ func (m *ChainConfirmModal) View() string {
 		stepDef := m.chain.Steps[i]
 
 		waitLabel := ""
+
 		switch stepDef.WaitFor {
 		case config.WaitSuccess:
 			waitLabel = "(wait: success)"
@@ -196,13 +205,15 @@ func (m *ChainConfirmModal) View() string {
 		s.WriteString(ui.CLIPreviewStyle.Render("     " + step.Command))
 		s.WriteString("\n")
 	}
+
 	s.WriteString("\n")
 
 	watchIndicator := "[ ]"
 	if m.watchMode {
 		watchIndicator = "[x]"
 	}
-	s.WriteString(ui.NormalStyle.Render(fmt.Sprintf("Watch runs: %s", watchIndicator)))
+
+	s.WriteString(ui.NormalStyle.Render("Watch runs: " + watchIndicator))
 	s.WriteString("\n\n")
 
 	s.WriteString(ui.HelpStyle.Render("[enter/y] confirm  [esc/n] cancel  [w] toggle watch"))

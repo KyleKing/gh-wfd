@@ -25,16 +25,16 @@ func (i BranchItem) FilterValue() string {
 
 // BranchModal presents a filterable list of branches.
 type BranchModal struct {
-	list            list.Model
-	done            bool
-	result          string
-	allBranches     []string
-	currentBranch   string
-	defaultBranch   string
-	wasFiltering    bool
-	originalItems   []list.Item
-	terminalWidth   int
-	terminalHeight  int
+	list           list.Model
+	done           bool
+	result         string
+	allBranches    []string
+	currentBranch  string
+	defaultBranch  string
+	wasFiltering   bool
+	originalItems  []list.Item
+	terminalWidth  int
+	terminalHeight int
 }
 
 // NewBranchModal creates a new branch selection modal.
@@ -51,6 +51,7 @@ func NewBranchModalWithDefault(title string, branches []string, current string, 
 
 	for i, branch := range pinnedBranches {
 		items[i] = BranchItem{name: branch}
+
 		if branch == current {
 			selectedIdx = i
 		}
@@ -96,10 +97,12 @@ func (m *BranchModal) SetSize(width, height int) {
 	m.terminalHeight = height
 
 	maxHeight := int(float64(height) * 0.8)
+
 	listHeight := maxHeight
 	if listHeight > 30 {
 		listHeight = 30
 	}
+
 	if listHeight < 10 {
 		listHeight = 10
 	}
@@ -135,6 +138,7 @@ func _pinBranches(branches []string, current string, defaultBranch string) []str
 	}
 
 	result = append(result, remaining...)
+
 	return result
 }
 
@@ -147,6 +151,7 @@ func (m *BranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if item, ok := m.list.SelectedItem().(BranchItem); ok {
 				m.result = item.name
 				m.done = true
+
 				return m, func() tea.Msg {
 					return BranchResultMsg{Value: m.result}
 				}
@@ -156,7 +161,9 @@ func (m *BranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 				m.list.ResetFilter()
 				return m, nil
 			}
+
 			m.done = true
+
 			return m, nil
 		}
 	}
@@ -168,6 +175,7 @@ func (m *BranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 	} else if m.wasFiltering && !isFiltering {
 		m.wasFiltering = false
 		m.list.SetItems(m.originalItems)
+
 		if m.currentBranch != "" {
 			for i, item := range m.originalItems {
 				if branchItem, ok := item.(BranchItem); ok && branchItem.name == m.currentBranch {
@@ -180,6 +188,7 @@ func (m *BranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
+
 	return m, cmd
 }
 

@@ -21,7 +21,7 @@ type WfdConfig struct {
 // ChainVariable represents a variable that can be set when running a chain.
 type ChainVariable struct {
 	Name        string   `yaml:"name"`
-	Type        string   `yaml:"type"`        // "string", "choice", "boolean"
+	Type        string   `yaml:"type"` // "string", "choice", "boolean"
 	Description string   `yaml:"description"`
 	Options     []string `yaml:"options"` // for type: choice
 	Default     string   `yaml:"default"`
@@ -74,6 +74,7 @@ func LoadFrom(path string) (*WfdConfig, error) {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
+
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
@@ -91,15 +92,18 @@ func LoadFrom(path string) (*WfdConfig, error) {
 			if chain.Steps[i].WaitFor == "" {
 				chain.Steps[i].WaitFor = WaitSuccess
 			}
+
 			if chain.Steps[i].OnFailure == "" {
 				chain.Steps[i].OnFailure = FailureAbort
 			}
 		}
+
 		for i := range chain.Variables {
 			if chain.Variables[i].Type == "" {
 				chain.Variables[i].Type = "string"
 			}
 		}
+
 		config.Chains[name] = chain
 	}
 
@@ -111,10 +115,12 @@ func (c *WfdConfig) GetChain(name string) (*Chain, bool) {
 	if c == nil || c.Chains == nil {
 		return nil, false
 	}
+
 	chain, ok := c.Chains[name]
 	if !ok {
 		return nil, false
 	}
+
 	return &chain, true
 }
 
@@ -123,11 +129,14 @@ func (c *WfdConfig) ChainNames() []string {
 	if c == nil || c.Chains == nil {
 		return nil
 	}
+
 	names := make([]string, 0, len(c.Chains))
 	for name := range c.Chains {
 		names = append(names, name)
 	}
+
 	sort.Strings(names)
+
 	return names
 }
 

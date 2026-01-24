@@ -48,17 +48,20 @@ func (m *RunConfirmModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Confirm):
 			m.done = true
 			m.result = RunConfirmResultMsg{Confirmed: true, Config: m.config}
+
 			return m, func() tea.Msg {
 				return m.result
 			}
 		case key.Matches(msg, m.keys.Cancel):
 			m.done = true
 			m.result = RunConfirmResultMsg{Confirmed: false, Config: m.config}
+
 			return m, func() tea.Msg {
 				return m.result
 			}
 		}
 	}
+
 	return m, nil
 }
 
@@ -77,19 +80,23 @@ func (m *RunConfirmModal) View() string {
 	s.WriteString("\n")
 
 	s.WriteString(ui.NormalStyle.Render("  Branch:   "))
+
 	branch := m.config.Branch
 	if branch == "" {
 		branch = "(default)"
 	}
+
 	s.WriteString(ui.TableDimmedStyle.Render(branch))
 	s.WriteString("\n")
 
 	inputCount := 0
+
 	for _, v := range m.config.Inputs {
 		if v != "" {
 			inputCount++
 		}
 	}
+
 	s.WriteString(ui.NormalStyle.Render("  Inputs:   "))
 	s.WriteString(ui.TableDimmedStyle.Render(fmt.Sprintf("%d value(s) provided", inputCount)))
 	s.WriteString("\n\n")

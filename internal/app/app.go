@@ -159,6 +159,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		rightWidth := m.width - leftWidth
 		topHeight := (m.height - 1) / 2
 		m.rightPanel.SetSize(rightWidth, topHeight)
+
 		return m, nil
 
 	case modal.SelectResultMsg:
@@ -189,18 +190,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.watcher != nil {
 			m.watcher.Unwatch(msg.RunID)
 		}
+
 		return m, nil
 
 	case modal.LiveViewClearAllMsg:
 		if m.watcher != nil {
 			m.watcher.ClearCompleted()
 		}
+
 		return m, nil
 
 	case RunUpdateMsg:
 		if m.watcher != nil {
 			m.rightPanel.SetRuns(m.watcher.GetRuns())
 		}
+
 		return m, m.watcherSubscription()
 
 	case ChainUpdateMsg:
@@ -238,6 +242,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.modalStack.Push(modal.NewErrorModal("Failed to Fetch Logs", msg.Error.Error()))
 			return m, nil
 		}
+
 		return m, func() tea.Msg {
 			return ShowLogsViewerMsg{
 				Logs:       msg.Logs,
@@ -256,6 +261,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.startLogStream(msg.RunID, msg.Workflow)
 			}
 		}
+
 		return m, nil
 
 	case StartLogStreamMsg:
@@ -268,6 +274,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				viewer.AppendStreamUpdate(msg.Update)
 			}
 		}
+
 		return m, m.logStreamSubscription()
 
 	case StopLogStreamMsg:
@@ -278,6 +285,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, func() tea.Msg {
 			// Reconstruct chain state from history entry
 			chainState := reconstructChainStateFromHistory(msg.Entry)
+
 			return FetchLogsMsg{
 				ChainState: &chainState,
 				Branch:     msg.Entry.Branch,
@@ -295,6 +303,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) updateModal(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Check if the current modal is a streaming logs viewer
 	var wasStreaming bool
+
 	if current := m.modalStack.Current(); current != nil {
 		if viewer, ok := current.(*modal.LogsViewerModal); ok {
 			wasStreaming = viewer.IsStreaming() && viewer.IsDone()
@@ -318,6 +327,7 @@ func reconstructChainStateFromHistory(entry frecency.HistoryEntry) chain.ChainSt
 
 	for i, result := range entry.StepResults {
 		status := chain.StepCompleted
+
 		switch result.Status {
 		case "completed":
 			status = chain.StepCompleted

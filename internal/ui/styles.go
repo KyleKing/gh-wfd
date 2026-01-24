@@ -48,6 +48,7 @@ var (
 // InitTheme sets the theme and applies colors.
 func InitTheme(t theme.Theme) {
 	currentTheme = t
+
 	ApplyTheme()
 }
 
@@ -131,6 +132,7 @@ func PaneStyle(width, height int, focused bool) lipgloss.Style {
 	if focused {
 		style = FocusedBorderStyle
 	}
+
 	return style.Width(width - 2).Height(height - 2)
 }
 
@@ -139,6 +141,7 @@ func FormatEmptyValue(val string) string {
 	if val == "" {
 		return `("")`
 	}
+
 	return val
 }
 
@@ -147,6 +150,7 @@ func RenderEmptyValue(val string) string {
 	if val == "" {
 		return TableItalicStyle.Render(`("")`)
 	}
+
 	return NormalStyle.Render(val)
 }
 
@@ -156,11 +160,14 @@ func ApplyFuzzyFilter(query string, items []string) []string {
 	if query == "" {
 		return items
 	}
+
 	matches := fuzzy.Find(query, items)
 	results := make([]string, len(matches))
+
 	for i, match := range matches {
 		results[i] = match.Str
 	}
+
 	return results
 }
 
@@ -183,6 +190,7 @@ func RemoveListBackgrounds(l list.Model) list.Model {
 	l.Styles.InactivePaginationDot = l.Styles.InactivePaginationDot.UnsetBackground()
 	l.Styles.ArabicPagination = l.Styles.ArabicPagination.UnsetBackground()
 	l.Styles.DividerDot = l.Styles.DividerDot.UnsetBackground()
+
 	return l
 }
 
@@ -191,9 +199,11 @@ func TruncateWithEllipsis(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
+
 	if maxLen <= 3 {
 		return s[:maxLen]
 	}
+
 	return s[:maxLen-3] + "..."
 }
 
@@ -202,6 +212,7 @@ func PadRight(s string, length int) string {
 	if len(s) >= length {
 		return s
 	}
+
 	return s + strings.Repeat(" ", length-len(s))
 }
 
@@ -213,9 +224,11 @@ func RenderScrollIndicator(hasMore, hasLess bool) string {
 	} else {
 		indicator += " "
 	}
+
 	indicator += " "
 	if hasMore {
 		indicator += "v"
 	}
+
 	return SubtitleStyle.Render(indicator)
 }

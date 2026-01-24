@@ -18,6 +18,7 @@ func (e *StepExecutionError) Error() string {
 	if e.RunURL != "" {
 		return fmt.Sprintf("step %d (%s) failed: %v [run: %s]", e.StepIndex+1, e.Workflow, e.Cause, e.RunURL)
 	}
+
 	return fmt.Sprintf("step %d (%s) failed: %v", e.StepIndex+1, e.Workflow, e.Cause)
 }
 
@@ -67,6 +68,7 @@ func (e *RunWaitError) Error() string {
 	if e.RunURL != "" {
 		return fmt.Sprintf("failed waiting for run %d: %v [url: %s]", e.RunID, e.Cause, e.RunURL)
 	}
+
 	return fmt.Sprintf("failed waiting for run %d: %v", e.RunID, e.Cause)
 }
 
@@ -80,10 +82,12 @@ func GetRunURL(err error) string {
 	if errors.As(err, &stepErr) && stepErr.RunURL != "" {
 		return stepErr.RunURL
 	}
+
 	var waitErr *RunWaitError
 	if errors.As(err, &waitErr) && waitErr.RunURL != "" {
 		return waitErr.RunURL
 	}
+
 	return ""
 }
 
@@ -93,5 +97,6 @@ func GetSuggestion(err error) string {
 	if errors.As(err, &dispatchErr) && dispatchErr.Suggestion != "" {
 		return dispatchErr.Suggestion
 	}
+
 	return ""
 }

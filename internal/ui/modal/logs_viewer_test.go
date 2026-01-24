@@ -134,18 +134,21 @@ func TestLogsViewerModal_QuickFilters(t *testing.T) {
 
 	// Press e for errors only
 	_, _ = modal.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("e")})
+
 	if modal.filterCfg.Level != logs.FilterErrors {
 		t.Error("expected error filter after e key")
 	}
 
 	// Press w for warnings
 	_, _ = modal.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("w")})
+
 	if modal.filterCfg.Level != logs.FilterWarnings {
 		t.Error("expected warning filter after w key")
 	}
 
 	// Press a for all
 	_, _ = modal.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("a")})
+
 	if modal.filterCfg.Level != logs.FilterAll {
 		t.Error("expected all filter after a key")
 	}

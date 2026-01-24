@@ -21,6 +21,7 @@ type Manager struct {
 // NewManager creates a new log manager that uses gh CLI if available.
 func NewManager(client GitHubClient, cacheDir string) *Manager {
 	var fetcher LogFetcher
+
 	useRealAPI := false
 
 	// Try to use GHFetcher if gh CLI is available
@@ -50,6 +51,7 @@ func (a *ghFetcherAdapter) FetchStepLogs(runID int64, workflow string) ([]*StepL
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch real logs via gh CLI: %w", err)
 	}
+
 	return logs, nil
 }
 
@@ -68,6 +70,7 @@ func (m *Manager) GetLogsForChain(chainState chain.ChainState, branch string) (*
 				RunID:     result.RunID,
 				Error:     err,
 			})
+
 			continue
 		}
 

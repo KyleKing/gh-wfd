@@ -31,6 +31,7 @@ func TestInterpolate_VarInputs(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if result != tt.expected {
 				t.Errorf("got %q, want %q", result, tt.expected)
 			}
@@ -65,6 +66,7 @@ func TestInterpolate_PreviousStep(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if result != tt.expected {
 				t.Errorf("got %q, want %q", result, tt.expected)
 			}
@@ -103,6 +105,7 @@ func TestInterpolate_StepsByIndex(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if result != tt.expected {
 				t.Errorf("got %q, want %q", result, tt.expected)
 			}
@@ -116,10 +119,12 @@ func TestInterpolate_MissingKey(t *testing.T) {
 	}
 
 	template := "{{ var.missing }}"
+
 	result, err := chain.Interpolate(template, ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if result != template {
 		t.Errorf("expected original template for missing key, got %q", result)
 	}
@@ -127,10 +132,12 @@ func TestInterpolate_MissingKey(t *testing.T) {
 
 func TestInterpolate_NilContext(t *testing.T) {
 	template := "{{ var.key }}"
+
 	result, err := chain.Interpolate(template, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if result != template {
 		t.Errorf("expected original template for nil context, got %q", result)
 	}

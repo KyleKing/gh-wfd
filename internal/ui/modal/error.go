@@ -42,6 +42,7 @@ func (m *ErrorModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			m.done = true
 		}
 	}
+
 	return m, nil
 }
 

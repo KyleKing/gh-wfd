@@ -34,6 +34,7 @@ func Parse(data []byte) (WorkflowFile, error) {
 				if err != nil {
 					continue
 				}
+
 				input.ValidationRules = rules
 				wf.On.WorkflowDispatch.Inputs[name] = input
 			}
@@ -74,11 +75,14 @@ func (t *rawOnTrigger) UnmarshalYAML(node *yaml.Node) error {
 		var m struct {
 			WorkflowDispatch *WorkflowDispatch `yaml:"workflow_dispatch"`
 		}
+
 		if err := node.Decode(&m); err != nil {
 			return err
 		}
+
 		t.WorkflowDispatch = m.WorkflowDispatch
 	}
+
 	return nil
 }
 
@@ -102,11 +106,13 @@ func parseInputComments(data []byte) (map[string][]string, error) {
 		valueNode := inputsNode.Content[i+1]
 
 		inputName := keyNode.Value
+
 		var comments []string
 
 		if keyNode.HeadComment != "" {
 			comments = append(comments, splitCommentLines(keyNode.HeadComment)...)
 		}
+
 		if keyNode.LineComment != "" {
 			comments = append(comments, splitCommentLines(keyNode.LineComment)...)
 		}
@@ -117,6 +123,7 @@ func parseInputComments(data []byte) (map[string][]string, error) {
 				if propNode.HeadComment != "" {
 					comments = append(comments, splitCommentLines(propNode.HeadComment)...)
 				}
+
 				if propNode.LineComment != "" {
 					comments = append(comments, splitCommentLines(propNode.LineComment)...)
 				}
@@ -182,11 +189,13 @@ func findInputsInOnNode(node *yaml.Node) *yaml.Node {
 
 func splitCommentLines(comment string) []string {
 	var lines []string
+
 	for _, line := range strings.Split(comment, "\n") {
 		line = strings.TrimSpace(line)
 		if line != "" {
 			lines = append(lines, line)
 		}
 	}
+
 	return lines
 }

@@ -44,8 +44,10 @@ func (s *Stack) Pop() Context {
 	if len(s.contexts) == 0 {
 		return nil
 	}
+
 	ctx := s.contexts[len(s.contexts)-1]
 	s.contexts = s.contexts[:len(s.contexts)-1]
+
 	return ctx
 }
 
@@ -54,6 +56,7 @@ func (s *Stack) Current() Context {
 	if len(s.contexts) == 0 {
 		return nil
 	}
+
 	return s.contexts[len(s.contexts)-1]
 }
 
@@ -91,6 +94,7 @@ func (s *Stack) Render(background string) string {
 	}
 
 	modalView := s.Current().View()
+
 	return placeCenter(background, modalView, s.width, s.height)
 }
 
@@ -102,6 +106,7 @@ func placeCenter(background, modal string, width, height int) string {
 		Background(ui.ModalBgColor)
 
 	styledModal := modalStyle.Render(modal)
+
 	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, styledModal, lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(lipgloss.NoColor{}))
 }
 

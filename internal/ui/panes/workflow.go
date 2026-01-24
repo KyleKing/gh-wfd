@@ -16,6 +16,7 @@ func (i WorkflowItem) Title() string {
 	if i.workflow.Name != "" {
 		return i.workflow.Name
 	}
+
 	return i.workflow.Filename
 }
 
@@ -23,6 +24,7 @@ func (i WorkflowItem) Description() string {
 	if i.workflow.Name != "" {
 		return i.workflow.Filename
 	}
+
 	return ""
 }
 
@@ -84,6 +86,7 @@ func (m WorkflowModel) Update(msg tea.Msg) (WorkflowModel, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
+
 	return m, cmd
 }
 
@@ -99,11 +102,14 @@ func (m WorkflowModel) SelectedWorkflow() *workflow.WorkflowFile {
 	if item == nil {
 		return nil
 	}
+
 	wi, ok := item.(WorkflowItem)
 	if !ok {
 		return nil
 	}
+
 	wf := wi.Workflow()
+
 	return &wf
 }
 
@@ -124,6 +130,7 @@ func (m WorkflowModel) HandleSelect() tea.Cmd {
 	if wf == nil {
 		return nil
 	}
+
 	return func() tea.Msg {
 		return WorkflowSelectedMsg{Workflow: *wf, Index: m.SelectedIndex()}
 	}

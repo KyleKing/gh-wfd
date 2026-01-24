@@ -53,9 +53,11 @@ type KeyMap struct {
 func makeNumberedBinding(num int, prefix string) key.Binding {
 	numStr := string('0' + rune(num))
 	label := numStr
+
 	if prefix == "workflow" && num == 0 {
 		return key.NewBinding(key.WithKeys(numStr), key.WithHelp(label, "workflow all"))
 	}
+
 	return key.NewBinding(key.WithKeys(numStr), key.WithHelp(label, prefix+" "+numStr))
 }
 

@@ -35,7 +35,7 @@ type LogsViewerModal struct {
 	keys           logsViewerKeyMap
 	width          int
 	height         int
-	startTime      time.Time      // for calculating relative timestamps
+	startTime      time.Time       // for calculating relative timestamps
 	matches        []MatchLocation // all match positions in rendered content
 	currentMatch   int             // index of current match (-1 if none)
 	isStreaming    bool
@@ -96,6 +96,7 @@ func NewLogsViewerModal(runLogs *logs.RunLogs, width, height int) *LogsViewerMod
 
 	// Find earliest timestamp to use as start time
 	startTime := time.Now()
+
 	for _, step := range runLogs.AllSteps() {
 		for _, entry := range step.Entries {
 			if entry.Timestamp.Before(startTime) {
@@ -122,6 +123,7 @@ func NewLogsViewerModal(runLogs *logs.RunLogs, width, height int) *LogsViewerMod
 	}
 
 	m.updateViewportContent()
+
 	return m
 }
 
@@ -130,6 +132,7 @@ func NewLogsViewerModalWithError(runLogs *logs.RunLogs, width, height int) *Logs
 	m := NewLogsViewerModal(runLogs, width, height)
 	m.filterCfg.Level = logs.FilterErrors
 	m.applyFilter()
+
 	return m
 }
 
@@ -156,6 +159,7 @@ func (m *LogsViewerModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Search):
 			m.searchMode = true
 			m.searchInput.Focus()
+
 			return m, textinput.Blink
 
 		case key.Matches(msg, m.keys.ToggleFilter):
@@ -165,16 +169,19 @@ func (m *LogsViewerModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.QuickFilterAll):
 			m.filterCfg.Level = logs.FilterAll
 			m.applyFilter()
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.QuickFilterWarnings):
 			m.filterCfg.Level = logs.FilterWarnings
 			m.applyFilter()
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.QuickFilterErrors):
 			m.filterCfg.Level = logs.FilterErrors
 			m.applyFilter()
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.ToggleCaseSensitive):
@@ -182,6 +189,7 @@ func (m *LogsViewerModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if m.filterCfg.SearchTerm != "" {
 				m.applyFilter()
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.NextMatch):
@@ -212,6 +220,7 @@ func (m *LogsViewerModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.viewport, cmd = m.viewport.Update(msg)
+
 	return m, cmd
 }
 
@@ -221,6 +230,7 @@ func (m *LogsViewerModal) handleSearchInput(msg tea.KeyMsg) (Context, tea.Cmd) {
 	case key.Matches(msg, m.keys.ExitSearch):
 		m.searchMode = false
 		m.searchInput.Blur()
+
 		return m, nil
 
 	case msg.Type == tea.KeyEnter:
@@ -228,11 +238,13 @@ func (m *LogsViewerModal) handleSearchInput(msg tea.KeyMsg) (Context, tea.Cmd) {
 		m.applyFilter()
 		m.searchMode = false
 		m.searchInput.Blur()
+
 		return m, nil
 	}
 
 	var cmd tea.Cmd
 	m.searchInput, cmd = m.searchInput.Update(msg)
+
 	return m, cmd
 }
 
@@ -258,6 +270,7 @@ func (m *LogsViewerModal) collapseAll() {
 	for i := range m.filtered.Steps {
 		m.collapsedSteps[i] = true
 	}
+
 	m.updateViewportContent()
 }
 
@@ -271,6 +284,7 @@ func (m *LogsViewerModal) cycleFilterLevel() {
 	case logs.FilterWarnings:
 		m.filterCfg.Level = logs.FilterAll
 	}
+
 	m.applyFilter()
 }
 
@@ -311,6 +325,7 @@ func (m *LogsViewerModal) buildMatchIndex() {
 						LineNumber: lineNumber,
 					})
 				}
+
 				lineNumber++
 			}
 		}
@@ -341,6 +356,7 @@ func (m *LogsViewerModal) jumpToPrevMatch() {
 	} else {
 		m.currentMatch = (m.currentMatch - 1 + len(m.matches)) % len(m.matches)
 	}
+
 	m.scrollToMatch(m.currentMatch)
 }
 
@@ -450,6 +466,7 @@ func (m *LogsViewerModal) renderLogEntry(entry *logs.FilteredLogEntry, stepIdx, 
 
 	// Check if this is the current match
 	isCurrentMatch := false
+
 	if m.currentMatch >= 0 && m.currentMatch < len(m.matches) {
 		match := m.matches[m.currentMatch]
 		if match.StepIndex == stepIdx && match.EntryIndex == entryIdx {
@@ -474,6 +491,7 @@ func formatDuration(d time.Duration) string {
 	hours := int(d.Hours())
 	minutes := int(d.Minutes()) % 60
 	seconds := int(d.Seconds()) % 60
+
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
@@ -515,6 +533,7 @@ func (m *LogsViewerModal) highlightMatches(content string, matches []logs.MatchP
 	}
 
 	var result strings.Builder
+
 	lastEnd := 0
 
 	for _, match := range matches {
@@ -541,10 +560,11 @@ func (m *LogsViewerModal) View() string {
 	var s strings.Builder
 
 	// Title
-	title := fmt.Sprintf("Logs: %s", m.runLogs.ChainName)
+	title := "Logs: " + m.runLogs.ChainName
 	if m.runLogs.Branch != "" {
 		title += fmt.Sprintf(" (%s)", m.runLogs.Branch)
 	}
+
 	s.WriteString(ui.TitleStyle.Render(title))
 	s.WriteString("\n\n")
 
@@ -581,6 +601,7 @@ func (m *LogsViewerModal) renderFilterStatus() string {
 
 	// Filter level with descriptive label
 	var filterLabel string
+
 	switch m.filterCfg.Level {
 	case logs.FilterErrors:
 		filterLabel = "Filter: errors only"
@@ -591,6 +612,7 @@ func (m *LogsViewerModal) renderFilterStatus() string {
 	default:
 		filterLabel = fmt.Sprintf("Filter: %s", m.filterCfg.Level)
 	}
+
 	parts = append(parts, ui.SubtitleStyle.Render(filterLabel))
 
 	// Search term with case sensitivity indicator
@@ -599,6 +621,7 @@ func (m *LogsViewerModal) renderFilterStatus() string {
 		if m.filterCfg.CaseSensitive {
 			caseIndicator = "[Aa]"
 		}
+
 		searchLabel := fmt.Sprintf("Search: %q %s", m.filterCfg.SearchTerm, caseIndicator)
 		parts = append(parts, ui.TableDimmedStyle.Render(searchLabel))
 
@@ -622,6 +645,7 @@ func (m *LogsViewerModal) renderFilterStatus() string {
 // renderLiveIndicator renders the live streaming status badge.
 func (m *LogsViewerModal) renderLiveIndicator() string {
 	var indicator string
+
 	var style lipgloss.Style
 
 	switch m.liveStatus {
@@ -672,7 +696,8 @@ func (m *LogsViewerModal) renderHelp() string {
 		if m.autoScroll {
 			autoScrollStatus = "on"
 		}
-		helpParts = append(helpParts, fmt.Sprintf("[s] auto-scroll: %s", autoScrollStatus))
+
+		helpParts = append(helpParts, "[s] auto-scroll: "+autoScrollStatus)
 	}
 
 	helpParts = append(helpParts, "[q] close")
@@ -770,6 +795,7 @@ func (m *LogsViewerModal) shouldAutoScroll() bool {
 func (m *LogsViewerModal) scrollToBottom() {
 	totalLines := m.viewport.TotalLineCount()
 	visibleLines := m.viewport.Height
+
 	if totalLines > visibleLines {
 		m.viewport.SetYOffset(totalLines - visibleLines)
 	}

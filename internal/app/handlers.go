@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os/exec"
 	"strings"
 
@@ -37,8 +37,10 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.viewMode = WorkflowListMode
 			m.selectedInput = -1
 			m.previewingHistoryEntry = nil
+
 			return m, nil
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.Tab):
@@ -65,12 +67,14 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.focused = PaneConfig
 			return m, nil
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.Edit):
 		if m.viewMode == InputDetailMode && m.selectedInput >= 0 {
 			return m.openInputModalFiltered(m.selectedInput)
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.Watch):
@@ -84,18 +88,21 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.focused == PaneConfig {
 			return m.openFilterModal()
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.Copy):
 		if m.focused == PaneConfig {
 			return m.copyCommandToClipboard()
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.Reset):
 		if m.focused == PaneConfig {
 			return m.openResetModal()
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.TabNext):
@@ -103,6 +110,7 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.rightPanel.NextTab()
 			return m, nil
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.TabPrev):
@@ -110,6 +118,7 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.rightPanel.PrevTab()
 			return m, nil
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.Clear):
@@ -120,8 +129,10 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 					m.rightPanel.SetRuns(m.watcher.GetRuns())
 				}
 			}
+
 			return m, nil
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.ClearAll):
@@ -130,8 +141,10 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.watcher.ClearCompleted()
 				m.rightPanel.SetRuns(m.watcher.GetRuns())
 			}
+
 			return m, nil
 		}
+
 		return m, nil
 
 	case key.Matches(msg, m.keys.LiveView):
@@ -144,12 +157,14 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.viewMode == HistoryPreviewMode && m.previewingHistoryEntry != nil {
 			return m.openRemapModal()
 		}
+
 		return m, nil
 
 	case msg.String() == "l":
 		if m.focused == PaneHistory && m.rightPanel.ActiveTab() == panes.TabHistory {
 			return m, m.rightPanel.History().HandleViewLogs()
 		}
+
 		return m, nil
 
 	default:
@@ -158,6 +173,7 @@ func (m Model) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				return m.handleInputKey(i)
 			}
 		}
+
 		for i, k := range m.keys.WorkflowKeys() {
 			if key.Matches(msg, k) {
 				return m.handleWorkflowKey(i)
@@ -172,6 +188,7 @@ func (m Model) handleInputKey(index int) (tea.Model, tea.Cmd) {
 	if m.focused == PaneConfig {
 		return m.openInputModalFiltered(index)
 	}
+
 	return m, nil
 }
 
@@ -179,15 +196,18 @@ func (m Model) handleWorkflowKey(num int) (tea.Model, tea.Cmd) {
 	if m.focused != PaneWorkflows {
 		return m, nil
 	}
+
 	if num == 0 {
 		m.selectedWorkflow = -1
 		return m, nil
 	}
+
 	workflowIdx := num - 1
 	if workflowIdx < len(m.workflows) {
 		m.selectedWorkflow = workflowIdx
 		m.initializeInputs(m.workflows[workflowIdx])
 	}
+
 	return m, nil
 }
 
@@ -215,10 +235,12 @@ func (m *Model) handleUp() {
 		} else if m.selectedInput > 0 {
 			m.selectedInput--
 		}
+
 		m.viewMode = InputDetailMode
 		if m.selectedInput < 0 {
 			m.viewMode = WorkflowListMode
 		}
+
 		m.syncFilteredInputs()
 	}
 }
@@ -247,10 +269,12 @@ func (m *Model) handleDown() {
 		} else if m.selectedInput < len(m.filteredInputs)-1 {
 			m.selectedInput++
 		}
+
 		m.viewMode = InputDetailMode
 		if m.selectedInput < 0 {
 			m.viewMode = WorkflowListMode
 		}
+
 		m.syncFilteredInputs()
 	}
 }
@@ -265,13 +289,17 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 				if m.viewMode == HistoryPreviewMode {
 					m.branch = entry.Branch
 					m.inputs = make(map[string]string)
+
 					for k, v := range entry.Inputs {
 						m.inputs[k] = v
 					}
+
 					m.viewMode = WorkflowListMode
 					m.previewingHistoryEntry = nil
+
 					return m.executeWorkflow()
 				}
+
 				m.viewMode = HistoryPreviewMode
 				m.previewingHistoryEntry = entry
 			}
@@ -283,6 +311,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case PaneConfig:
 		return m.executeWorkflow()
 	}
+
 	return m, nil
 }
 
@@ -297,6 +326,7 @@ func (m Model) startChainFlow(name string, chainDef config.Chain) (tea.Model, te
 
 	m.pendingChainVariables = nil
 	m.modalStack.Push(modal.NewChainConfirmModal(name, &chainDef, nil, m.branch, m.watchRun))
+
 	return m, nil
 }
 
@@ -304,6 +334,7 @@ func (m Model) handleChainVariableResult(msg modal.ChainVariableResultMsg) (tea.
 	if msg.Cancelled || m.pendingChain == nil {
 		m.pendingChainName = ""
 		m.pendingChain = nil
+
 		return m, nil
 	}
 
@@ -315,6 +346,7 @@ func (m Model) handleChainVariableResult(msg modal.ChainVariableResultMsg) (tea.
 		m.branch,
 		m.watchRun,
 	))
+
 	return m, nil
 }
 
@@ -323,6 +355,7 @@ func (m Model) handleChainConfirmResult(msg modal.ChainConfirmResultMsg) (tea.Mo
 		m.pendingChainName = ""
 		m.pendingChain = nil
 		m.pendingChainVariables = nil
+
 		return m, nil
 	}
 
@@ -399,6 +432,7 @@ func (m Model) handleChainStatusStop() (tea.Model, tea.Cmd) {
 		m.chainExecutor.Stop()
 		m.chainExecutor = nil
 	}
+
 	return m, nil
 }
 
@@ -423,11 +457,13 @@ func (m Model) executeWorkflow() (tea.Model, tea.Cmd) {
 	}
 
 	m.modalStack.Push(modal.NewRunConfirmModal(cfg))
+
 	return m, nil
 }
 
 func (m Model) validateAllInputs(wf workflow.WorkflowFile) map[string][]string {
 	errs := make(map[string][]string)
+
 	inputs := wf.GetInputs()
 	for name, input := range inputs {
 		if rules := input.ValidationRules; len(rules) > 0 {
@@ -436,6 +472,7 @@ func (m Model) validateAllInputs(wf workflow.WorkflowFile) map[string][]string {
 			}
 		}
 	}
+
 	return errs
 }
 
@@ -460,6 +497,7 @@ func (m Model) openBranchModal() (tea.Model, tea.Cmd) {
 	branchModal := modal.NewSimpleBranchModal("Select Branch", branches, m.branch, defaultBranch)
 	branchModal.SetSize(m.width, m.height)
 	m.modalStack.Push(branchModal)
+
 	return m, nil
 }
 
@@ -467,8 +505,10 @@ func (m Model) openLiveViewModal() (tea.Model, tea.Cmd) {
 	if m.watcher == nil {
 		return m, nil
 	}
+
 	runs := m.watcher.GetRuns()
 	m.modalStack.Push(modal.NewLiveViewModal(runs))
+
 	return m, nil
 }
 
@@ -476,7 +516,9 @@ func (m Model) openChainSelectModal() (tea.Model, tea.Cmd) {
 	if m.wfdConfig == nil || !m.wfdConfig.HasChains() {
 		return m, nil
 	}
+
 	m.modalStack.Push(modal.NewChainSelectModal(m.wfdConfig))
+
 	return m, nil
 }
 
@@ -484,6 +526,7 @@ func (m Model) openInputModal(index int) (tea.Model, tea.Cmd) {
 	if index >= len(m.inputOrder) {
 		return m, nil
 	}
+
 	return m.openInputModalForName(m.inputOrder[index])
 }
 
@@ -491,8 +534,10 @@ func (m Model) openInputModalForName(name string) (tea.Model, tea.Cmd) {
 	if m.selectedWorkflow >= len(m.workflows) {
 		return m, nil
 	}
+
 	wf := m.workflows[m.selectedWorkflow]
 	inputs := wf.GetInputs()
+
 	input, ok := inputs[name]
 	if !ok {
 		return m, nil
@@ -519,12 +564,14 @@ func (m Model) openInputModalFiltered(index int) (tea.Model, tea.Cmd) {
 	if index >= len(m.filteredInputs) {
 		return m, nil
 	}
+
 	return m.openInputModalForName(m.filteredInputs[index])
 }
 
 func (m Model) openFilterModal() (tea.Model, tea.Cmd) {
 	filterModal := modal.NewFilterModal("Filter Inputs", m.inputOrder, "")
 	m.modalStack.Push(filterModal)
+
 	return m, nil
 }
 
@@ -532,13 +579,16 @@ func (m Model) openResetModal() (tea.Model, tea.Cmd) {
 	if m.selectedWorkflow >= len(m.workflows) {
 		return m, nil
 	}
+
 	wf := m.workflows[m.selectedWorkflow]
 	inputs := wf.GetInputs()
+
 	var diffs []modal.ResetDiff
 
 	for _, name := range m.inputOrder {
 		input := inputs[name]
 		current := m.inputs[name]
+
 		if current != input.Default {
 			diffs = append(diffs, modal.ResetDiff{
 				Name:    name,
@@ -550,6 +600,7 @@ func (m Model) openResetModal() (tea.Model, tea.Cmd) {
 
 	resetModal := modal.NewResetModal(diffs)
 	m.modalStack.Push(resetModal)
+
 	return m, nil
 }
 
@@ -572,6 +623,7 @@ func (m Model) openRemapModal() (tea.Model, tea.Cmd) {
 	currentInputs := currentWorkflow.GetInputs()
 	remapModal := modal.NewRemapModal(validationErrors, currentInputs)
 	m.modalStack.Push(remapModal)
+
 	return m, nil
 }
 
@@ -580,6 +632,7 @@ func (m Model) handleSelectResult(msg modal.SelectResultMsg) (tea.Model, tea.Cmd
 		m.inputs[m.pendingInputName] = msg.Value
 		m.pendingInputName = ""
 	}
+
 	return m, nil
 }
 
@@ -593,6 +646,7 @@ func (m Model) handleInputResult(msg modal.InputResultMsg) (tea.Model, tea.Cmd) 
 		m.inputs[m.pendingInputName] = msg.Value
 		m.pendingInputName = ""
 	}
+
 	return m, nil
 }
 
@@ -603,8 +657,10 @@ func (m Model) handleConfirmResult(msg modal.ConfirmResultMsg) (tea.Model, tea.C
 		} else {
 			m.inputs[m.pendingInputName] = "false"
 		}
+
 		m.pendingInputName = ""
 	}
+
 	return m, nil
 }
 
@@ -613,6 +669,7 @@ func (m Model) handleFilterResult(msg modal.FilterResultMsg) (tea.Model, tea.Cmd
 		m.filterText = msg.Value
 		m.applyFilter()
 	}
+
 	return m, nil
 }
 
@@ -620,6 +677,7 @@ func (m Model) handleResetResult(msg modal.ResetResultMsg) (tea.Model, tea.Cmd) 
 	if msg.Confirmed {
 		m.resetAllInputs()
 	}
+
 	return m, nil
 }
 
@@ -627,6 +685,7 @@ func (m Model) handleRunConfirmResult(msg modal.RunConfirmResultMsg) (tea.Model,
 	if msg.Confirmed {
 		return m.doExecuteWorkflow(msg.Config)
 	}
+
 	return m, nil
 }
 
@@ -682,6 +741,7 @@ func (m Model) handleChainUpdate(msg ChainUpdateMsg) (tea.Model, tea.Cmd) {
 		m.executingChainBranch = ""
 		m.executingChainVariables = nil
 		m.chainExecutor = nil
+
 		return m, nil
 	}
 
@@ -703,6 +763,7 @@ func convertToFrecencyStepResults(stepResults map[int]*chain.StepResult) []frece
 	}
 
 	results := make([]frecency.ChainStepResult, maxIdx+1)
+
 	for idx, result := range stepResults {
 		if result != nil {
 			status := string(result.Status)
@@ -723,6 +784,7 @@ func (m Model) handleValidationErrorResult(msg modal.ValidationErrorResultMsg) (
 		if m.selectedWorkflow < 0 || m.selectedWorkflow >= len(m.workflows) {
 			return m, nil
 		}
+
 		wf := m.workflows[m.selectedWorkflow]
 		cfg := runner.RunConfig{
 			Workflow: wf.Filename,
@@ -732,6 +794,7 @@ func (m Model) handleValidationErrorResult(msg modal.ValidationErrorResultMsg) (
 		}
 		m.modalStack.Push(modal.NewRunConfirmModal(cfg))
 	}
+
 	return m, nil
 }
 
@@ -754,7 +817,9 @@ func (m *Model) resetAllInputs() {
 	if m.selectedWorkflow >= len(m.workflows) {
 		return
 	}
+
 	wf := m.workflows[m.selectedWorkflow]
+
 	inputs := wf.GetInputs()
 	for name, input := range inputs {
 		m.inputs[name] = input.Default
@@ -771,8 +836,10 @@ func (m Model) copyCommandToClipboard() (tea.Model, tea.Cmd) {
 	if m.selectedWorkflow >= len(m.workflows) {
 		return m, nil
 	}
+
 	cmd := m.buildCLIString()
 	clipboard.WriteAll(cmd)
+
 	return m, nil
 }
 
@@ -780,17 +847,21 @@ func (m Model) buildCLIString() string {
 	if m.selectedWorkflow >= len(m.workflows) {
 		return ""
 	}
+
 	wf := m.workflows[m.selectedWorkflow]
+
 	args := []string{"workflow", "run", wf.Filename}
 	if m.branch != "" {
 		args = append(args, "--ref", m.branch)
 	}
+
 	for _, name := range m.inputOrder {
 		val := m.inputs[name]
 		if val != "" {
 			args = append(args, "-f", name+"="+val)
 		}
 	}
+
 	return "gh " + strings.Join(args, " ")
 }
 
@@ -798,6 +869,7 @@ func (m Model) watcherSubscription() tea.Cmd {
 	if m.watcher == nil {
 		return nil
 	}
+
 	return func() tea.Msg {
 		update := <-m.watcher.Updates()
 		return RunUpdateMsg{Update: update}
@@ -808,6 +880,7 @@ func (m Model) chainSubscription() tea.Cmd {
 	if m.chainExecutor == nil {
 		return nil
 	}
+
 	return func() tea.Msg {
 		update := <-m.chainExecutor.Updates()
 		return ChainUpdateMsg{Update: update}
@@ -817,12 +890,15 @@ func (m Model) chainSubscription() tea.Cmd {
 func (m Model) fetchLogs(msg FetchLogsMsg) tea.Cmd {
 	return func() tea.Msg {
 		if m.logManager == nil {
-			return LogsFetchedMsg{Error: fmt.Errorf("log manager not initialized")}
+			return LogsFetchedMsg{Error: errors.New("log manager not initialized")}
 		}
 
 		var runLogs *logs.RunLogs
+
 		var err error
+
 		var runID int64
+
 		var workflow string
 
 		if msg.ChainState != nil {
@@ -837,7 +913,7 @@ func (m Model) fetchLogs(msg FetchLogsMsg) tea.Cmd {
 			runID = msg.RunID
 			workflow = msg.Workflow
 		} else {
-			return LogsFetchedMsg{Error: fmt.Errorf("no chain state or run ID provided")}
+			return LogsFetchedMsg{Error: errors.New("no chain state or run ID provided")}
 		}
 
 		return LogsFetchedMsg{
@@ -870,6 +946,7 @@ func (m Model) showLogsViewer(runLogs *logs.RunLogs, errorsOnly bool, runID int6
 	}
 
 	m.modalStack.Push(logsModal)
+
 	return m
 }
 
@@ -890,6 +967,7 @@ func (m Model) logStreamSubscription() tea.Cmd {
 	if m.logStreamer == nil {
 		return nil
 	}
+
 	return func() tea.Msg {
 		update := <-m.logStreamer.Updates()
 		return LogStreamUpdateMsg{Update: update}

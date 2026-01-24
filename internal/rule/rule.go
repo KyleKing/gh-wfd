@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -41,12 +42,14 @@ func ParseValidationComment(comment string) (*ValidationRule, error) {
 	}
 
 	ruleSpec := strings.TrimPrefix(comment, validationPrefix)
+
 	parts := strings.SplitN(ruleSpec, ":", 2)
 	if len(parts) == 0 {
 		return nil, nil
 	}
 
 	ruleType := parts[0]
+
 	ruleValue := ""
 	if len(parts) > 1 {
 		ruleValue = parts[1]
@@ -55,11 +58,13 @@ func ParseValidationComment(comment string) (*ValidationRule, error) {
 	switch ruleType {
 	case "regex":
 		if ruleValue == "" {
-			return nil, fmt.Errorf("regex rule requires a pattern")
+			return nil, errors.New("regex rule requires a pattern")
 		}
+
 		if _, err := regexp.Compile(ruleValue); err != nil {
 			return nil, fmt.Errorf("invalid regex pattern: %w", err)
 		}
+
 		return &ValidationRule{Type: RuleRegex, Pattern: ruleValue}, nil
 
 	case "range":
@@ -67,6 +72,7 @@ func ParseValidationComment(comment string) (*ValidationRule, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid range: %w", err)
 		}
+
 		return &ValidationRule{Type: RuleRange, Min: min, Max: max}, nil
 
 	case "required":
@@ -74,14 +80,16 @@ func ParseValidationComment(comment string) (*ValidationRule, error) {
 
 	case "prefix":
 		if ruleValue == "" {
-			return nil, fmt.Errorf("prefix rule requires a value")
+			return nil, errors.New("prefix rule requires a value")
 		}
+
 		return &ValidationRule{Type: RulePrefix, Pattern: ruleValue}, nil
 
 	case "suffix":
 		if ruleValue == "" {
-			return nil, fmt.Errorf("suffix rule requires a value")
+			return nil, errors.New("suffix rule requires a value")
 		}
+
 		return &ValidationRule{Type: RuleSuffix, Pattern: ruleValue}, nil
 
 	case "length":
@@ -89,6 +97,7 @@ func ParseValidationComment(comment string) (*ValidationRule, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid length: %w", err)
 		}
+
 		return &ValidationRule{Type: RuleLength, Min: min, Max: max}, nil
 
 	default:
@@ -99,15 +108,18 @@ func ParseValidationComment(comment string) (*ValidationRule, error) {
 // ParseValidationComments parses multiple comment lines and returns all valid rules.
 func ParseValidationComments(comments []string) ([]ValidationRule, error) {
 	var rules []ValidationRule
+
 	for _, comment := range comments {
 		rule, err := ParseValidationComment(comment)
 		if err != nil {
 			return nil, err
 		}
+
 		if rule != nil {
 			rules = append(rules, *rule)
 		}
 	}
+
 	return rules, nil
 }
 
@@ -135,32 +147,35 @@ func validateRule(value string, r ValidationRule) string {
 	case RuleRegex:
 		re, err := regexp.Compile(r.Pattern)
 		if err != nil {
-			return fmt.Sprintf("invalid regex pattern: %s", r.Pattern)
+			return "invalid regex pattern: " + r.Pattern
 		}
+
 		if !re.MatchString(value) {
-			return fmt.Sprintf("must match pattern: %s", r.Pattern)
+			return "must match pattern: " + r.Pattern
 		}
 
 	case RuleRange:
 		if value == "" {
 			return ""
 		}
+
 		num, err := strconv.Atoi(value)
 		if err != nil {
 			return "must be a number"
 		}
+
 		if num < r.Min || num > r.Max {
 			return fmt.Sprintf("must be between %d and %d", r.Min, r.Max)
 		}
 
 	case RulePrefix:
 		if value != "" && !strings.HasPrefix(value, r.Pattern) {
-			return fmt.Sprintf("must start with: %s", r.Pattern)
+			return "must start with: " + r.Pattern
 		}
 
 	case RuleSuffix:
 		if value != "" && !strings.HasSuffix(value, r.Pattern) {
-			return fmt.Sprintf("must end with: %s", r.Pattern)
+			return "must end with: " + r.Pattern
 		}
 
 	case RuleLength:
@@ -176,7 +191,7 @@ func validateRule(value string, r ValidationRule) string {
 func parseRange(s string) (int, int, error) {
 	parts := strings.Split(s, "-")
 	if len(parts) != 2 {
-		return 0, 0, fmt.Errorf("expected format: min-max")
+		return 0, 0, errors.New("expected format: min-max")
 	}
 
 	min, err := strconv.Atoi(strings.TrimSpace(parts[0]))
@@ -190,7 +205,7 @@ func parseRange(s string) (int, int, error) {
 	}
 
 	if min > max {
-		return 0, 0, fmt.Errorf("min must be less than or equal to max")
+		return 0, 0, errors.New("min must be less than or equal to max")
 	}
 
 	return min, max, nil

@@ -49,6 +49,7 @@ func LoadFrom(path string) (*Store, error) {
 		if os.IsNotExist(err) {
 			return NewStore(), nil
 		}
+
 		return nil, err
 	}
 
@@ -60,6 +61,7 @@ func LoadFrom(path string) (*Store, error) {
 	if store.Entries == nil {
 		store.Entries = make(map[string][]HistoryEntry)
 	}
+
 	return &store, nil
 }
 
@@ -91,6 +93,7 @@ func (s *Store) Record(repo string, workflow, branch string, inputs map[string]s
 			entries[i].RunCount++
 			entries[i].LastRunAt = time.Now()
 			s.Entries[repo] = entries
+
 			return
 		}
 	}
@@ -116,6 +119,7 @@ func (s *Store) RecordChain(repo string, chainName, branch string, inputs map[st
 			entries[i].LastRunAt = time.Now()
 			entries[i].StepResults = stepResults
 			s.Entries[repo] = entries
+
 			return
 		}
 	}
@@ -148,6 +152,7 @@ func (s *Store) TopForRepo(repo, workflowFilter string, limit int) []HistoryEntr
 	if limit > 0 && len(result) > limit {
 		result = result[:limit]
 	}
+
 	return result
 }
 
@@ -155,10 +160,12 @@ func mapsEqual(a, b map[string]string) bool {
 	if len(a) != len(b) {
 		return false
 	}
+
 	for k, v := range a {
 		if b[k] != v {
 			return false
 		}
 	}
+
 	return true
 }

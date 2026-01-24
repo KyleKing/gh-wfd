@@ -72,12 +72,14 @@ func (m *InputModal) validate() string {
 
 	if m.inputType == "choice" && len(m.options) > 0 && value != "" {
 		validOption := false
+
 		for _, opt := range m.options {
 			if opt == value {
 				validOption = true
 				break
 			}
 		}
+
 		if !validOption {
 			return "\"" + value + "\" is not a valid option"
 		}
@@ -102,15 +104,19 @@ func (m *InputModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			m.input.SetValue(m.defaultVal)
 			m.validationErr = ""
 			m.hasError = false
+
 			return m, nil
 		case key.Matches(msg, m.keys.Enter):
 			if err := m.validate(); err != "" && !m.hasError {
 				m.validationErr = err
 				m.hasError = true
+
 				return m, nil
 			}
+
 			m.result = m.input.Value()
 			m.done = true
+
 			return m, func() tea.Msg {
 				return InputResultMsg{Value: m.result}
 			}
@@ -118,20 +124,26 @@ func (m *InputModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if m.hasError {
 				m.validationErr = ""
 				m.hasError = false
+
 				return m, nil
 			}
+
 			m.done = true
+
 			return m, nil
 		}
 	}
 
 	var cmd tea.Cmd
+
 	prevValue := m.input.Value()
 	m.input, cmd = m.input.Update(msg)
+
 	if m.input.Value() != prevValue {
 		m.validationErr = ""
 		m.hasError = false
 	}
+
 	return m, cmd
 }
 

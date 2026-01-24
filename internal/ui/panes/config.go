@@ -3,6 +3,7 @@ package panes
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -51,6 +52,7 @@ func (m *ConfigModel) SetWorkflow(wf *workflow.WorkflowFile) {
 			m.inputs[name] = input.Default
 			m.inputOrder = append(m.inputOrder, name)
 		}
+
 		sort.Strings(m.inputOrder)
 		m.filteredOrder = m.inputOrder
 	}
@@ -71,6 +73,7 @@ func (m *ConfigModel) SetInputs(inputs map[string]string) {
 	if inputs == nil {
 		return
 	}
+
 	for k, v := range inputs {
 		m.inputs[k] = v
 	}
@@ -101,9 +104,11 @@ func (m *ConfigModel) SetFocused(focused bool) {
 func (m *ConfigModel) SetFilter(filter string) {
 	m.filterText = filter
 	m.filteredOrder = ui.ApplyFuzzyFilter(filter, m.inputOrder)
+
 	if m.selectedRow >= len(m.filteredOrder) {
 		m.selectedRow = len(m.filteredOrder) - 1
 	}
+
 	m.scrollOffset = 0
 }
 
@@ -114,6 +119,7 @@ func (m *ConfigModel) SelectUp() {
 	} else if m.selectedRow > 0 {
 		m.selectedRow--
 	}
+
 	m.adjustScroll()
 }
 
@@ -124,6 +130,7 @@ func (m *ConfigModel) SelectDown() {
 	} else if m.selectedRow < len(m.filteredOrder)-1 {
 		m.selectedRow++
 	}
+
 	m.adjustScroll()
 }
 
@@ -137,6 +144,7 @@ func (m *ConfigModel) SelectedInput() string {
 	if m.selectedRow < 0 || m.selectedRow >= len(m.filteredOrder) {
 		return ""
 	}
+
 	return m.filteredOrder[m.selectedRow]
 }
 
@@ -155,6 +163,7 @@ func (m *ConfigModel) ResetAllInputs() {
 	if m.workflow == nil {
 		return
 	}
+
 	wfInputs := m.workflow.GetInputs()
 	for name, input := range wfInputs {
 		m.inputs[name] = input.Default
@@ -163,9 +172,11 @@ func (m *ConfigModel) ResetAllInputs() {
 
 func (m *ConfigModel) adjustScroll() {
 	visibleRows := m.visibleRowCount()
+
 	if m.selectedRow < m.scrollOffset {
 		m.scrollOffset = m.selectedRow
 	}
+
 	if m.selectedRow >= m.scrollOffset+visibleRows {
 		m.scrollOffset = m.selectedRow - visibleRows + 1
 	}
@@ -185,6 +196,7 @@ func (m ConfigModel) View() string {
 	style := ui.PaneStyle(m.width, m.height, m.focused)
 
 	var content strings.Builder
+
 	content.WriteString(ui.TitleStyle.Render("Configuration"))
 	content.WriteString("\n\n")
 
@@ -192,6 +204,7 @@ func (m ConfigModel) View() string {
 		content.WriteString(ui.SubtitleStyle.Render("No workflow selected"))
 		content.WriteString("\n\n")
 		content.WriteString(ui.HelpStyle.Render("[Tab] pane  [q] quit"))
+
 		return style.Render(content.String())
 	}
 
@@ -199,6 +212,7 @@ func (m ConfigModel) View() string {
 	if branch == "" {
 		branch = "(not set)"
 	}
+
 	content.WriteString(ui.TitleStyle.Render("Branch"))
 	content.WriteString(": ")
 	content.WriteString(ui.HelpStyle.Render("[b]"))
@@ -208,11 +222,13 @@ func (m ConfigModel) View() string {
 	content.WriteString("    Watch: ")
 	content.WriteString(ui.HelpStyle.Render("[w]"))
 	content.WriteString(" ")
+
 	if m.watchRun {
 		content.WriteString("on")
 	} else {
 		content.WriteString("off")
 	}
+
 	content.WriteString("    ")
 	content.WriteString(ui.HelpStyle.Render("[r]"))
 	content.WriteString(" reset all")
@@ -231,11 +247,14 @@ func (m ConfigModel) View() string {
 	content.WriteString("\n\n")
 	content.WriteString(ui.SubtitleStyle.Render("Command:"))
 	content.WriteString("\n")
+
 	cliCmd := m.BuildCLIString()
 	maxCmdWidth := m.width - 10
+
 	if maxCmdWidth > 0 && len(cliCmd) > maxCmdWidth {
 		cliCmd = "..." + cliCmd[len(cliCmd)-maxCmdWidth+3:]
 	}
+
 	content.WriteString(ui.CLIPreviewStyle.Render(cliCmd))
 	content.WriteString(" ")
 	content.WriteString(ui.HelpStyle.Render("[c]"))
@@ -260,12 +279,14 @@ func (m ConfigModel) renderTableRows() string {
 	}
 
 	wfInputs := m.workflow.GetInputs()
+
 	visibleRows := m.visibleRowCount()
 	if visibleRows < 1 {
 		visibleRows = 5
 	}
 
 	visibleStart := m.scrollOffset
+
 	visibleEnd := m.scrollOffset + visibleRows
 	if visibleEnd > len(m.filteredOrder) {
 		visibleEnd = len(m.filteredOrder)
@@ -278,8 +299,9 @@ func (m ConfigModel) renderTableRows() string {
 
 		numStr := " "
 		displayIdx := i
+
 		if displayIdx <= 9 {
-			numStr = fmt.Sprintf("%d", displayIdx)
+			numStr = strconv.Itoa(displayIdx)
 		}
 
 		reqStr := " "
@@ -317,6 +339,7 @@ func (m ConfigModel) renderTableRows() string {
 		}
 
 		rows.WriteString(rowStyle.Render(row))
+
 		if i < visibleEnd-1 {
 			rows.WriteString("\n")
 		}
@@ -351,6 +374,7 @@ func (m ConfigModel) GetAllInputs() map[string]string {
 	for k, v := range m.inputs {
 		result[k] = v
 	}
+
 	return result
 }
 
@@ -397,6 +421,7 @@ func (m ConfigModel) BuildCLIString() string {
 	if args == nil {
 		return ""
 	}
+
 	return "gh " + strings.Join(args, " ")
 }
 
@@ -414,5 +439,6 @@ func (m ConfigModel) GetModifiedInputs() map[string]struct{ Current, Default str
 			result[name] = struct{ Current, Default string }{current, input.Default}
 		}
 	}
+
 	return result
 }

@@ -40,11 +40,14 @@ func (e *RealExecutor) Execute(name string, args ...string) (string, string, err
 	cmd := exec.Command(name, args...)
 
 	var stdout bytes.Buffer
+
 	var stderr bytes.Buffer
+
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
+
 	return stdout.String(), stderr.String(), err
 }
 
@@ -60,22 +63,22 @@ func isMutationCommand(name string, args []string) bool {
 
 	// Block commands that can mutate GitHub state
 	mutationCommands := map[string]bool{
-		"workflow":       true, // gh workflow run
-		"issue":          true, // gh issue create/edit/close
-		"pr":             true, // gh pr create/merge/close
-		"release":        true, // gh release create/delete
-		"repo":           true, // gh repo create/delete
-		"secret":         true, // gh secret set/delete
-		"variable":       true, // gh variable set/delete
-		"label":          true, // gh label create/delete
-		"run":            true, // gh run cancel/rerun (but not "run view")
-		"gist":           true, // gh gist create/delete
-		"project":        true, // gh project create/delete
-		"cache":          true, // gh cache delete
-		"attestation":    true, // gh attestation verify can write
-		"codespace":      true, // gh codespace create/delete
-		"gpg-key":        true, // gh gpg-key add/delete
-		"ssh-key":        true, // gh ssh-key add/delete
+		"workflow":    true, // gh workflow run
+		"issue":       true, // gh issue create/edit/close
+		"pr":          true, // gh pr create/merge/close
+		"release":     true, // gh release create/delete
+		"repo":        true, // gh repo create/delete
+		"secret":      true, // gh secret set/delete
+		"variable":    true, // gh variable set/delete
+		"label":       true, // gh label create/delete
+		"run":         true, // gh run cancel/rerun (but not "run view")
+		"gist":        true, // gh gist create/delete
+		"project":     true, // gh project create/delete
+		"cache":       true, // gh cache delete
+		"attestation": true, // gh attestation verify can write
+		"codespace":   true, // gh codespace create/delete
+		"gpg-key":     true, // gh gpg-key add/delete
+		"ssh-key":     true, // gh ssh-key add/delete
 	}
 
 	subcommand := args[0]
@@ -87,6 +90,7 @@ func isMutationCommand(name string, args []string) bool {
 		if operation == "view" || operation == "list" || operation == "watch" {
 			return false
 		}
+
 		return true // Block cancel, rerun, etc.
 	}
 

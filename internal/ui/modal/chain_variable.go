@@ -88,6 +88,7 @@ func (m *ChainVariableModal) currentVariable() *config.ChainVariable {
 	if m.selectedIndex >= len(m.chain.Variables) {
 		return nil
 	}
+
 	return &m.chain.Variables[m.selectedIndex]
 }
 
@@ -95,16 +96,19 @@ func (m *ChainVariableModal) currentName() string {
 	if m.selectedIndex >= len(m.variableOrder) {
 		return ""
 	}
+
 	return m.variableOrder[m.selectedIndex]
 }
 
 func (m *ChainVariableModal) validateRequired() []string {
 	var missing []string
+
 	for _, v := range m.chain.Variables {
 		if v.Required && m.variables[v.Name] == "" {
 			missing = append(missing, v.Name)
 		}
 	}
+
 	return missing
 }
 
@@ -113,6 +117,7 @@ func (m *ChainVariableModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 	if m.editing {
 		return m.updateEditing(msg)
 	}
+
 	return m.updateNavigating(msg)
 }
 
@@ -126,24 +131,28 @@ func (m *ChainVariableModal) updateNavigating(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Cancel):
 			m.done = true
 			m.result = ChainVariableResultMsg{Cancelled: true}
+
 			return m, func() tea.Msg { return m.result }
 
 		case key.Matches(msg, m.keys.Up):
 			if m.selectedIndex > 0 {
 				m.selectedIndex--
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.Down):
 			if m.selectedIndex < len(m.variableOrder)-1 {
 				m.selectedIndex++
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.RestoreDefault):
 			if v != nil {
 				m.variables[name] = v.Default
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.Toggle):
@@ -154,18 +163,21 @@ func (m *ChainVariableModal) updateNavigating(msg tea.Msg) (Context, tea.Cmd) {
 					m.variables[name] = "true"
 				}
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.NextOption):
 			if v != nil && v.Type == "choice" && len(v.Options) > 0 {
 				m.cycleOption(name, v.Options, 1)
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.PrevOption):
 			if v != nil && v.Type == "choice" && len(v.Options) > 0 {
 				m.cycleOption(name, v.Options, -1)
 			}
+
 			return m, nil
 
 		case key.Matches(msg, m.keys.Edit), key.Matches(msg, m.keys.Confirm):
@@ -178,6 +190,7 @@ func (m *ChainVariableModal) updateNavigating(msg tea.Msg) (Context, tea.Cmd) {
 				m.editing = true
 				m.editInput.SetValue(m.variables[name])
 				m.editInput.Focus()
+
 				return m, nil
 
 			case "boolean":
@@ -186,33 +199,39 @@ func (m *ChainVariableModal) updateNavigating(msg tea.Msg) (Context, tea.Cmd) {
 				} else {
 					m.variables[name] = "true"
 				}
+
 				return m.advanceOrConfirm()
 
 			case "choice":
 				if len(v.Options) > 0 {
 					m.cycleOption(name, v.Options, 1)
 				}
+
 				return m.advanceOrConfirm()
 
 			default:
 				m.editing = true
 				m.editInput.SetValue(m.variables[name])
 				m.editInput.Focus()
+
 				return m, nil
 			}
 		}
 	}
+
 	return m, nil
 }
 
 func (m *ChainVariableModal) cycleOption(name string, options []string, delta int) {
 	currentIdx := 0
+
 	for i, opt := range options {
 		if opt == m.variables[name] {
 			currentIdx = i
 			break
 		}
 	}
+
 	newIdx := (currentIdx + delta + len(options)) % len(options)
 	m.variables[name] = options[newIdx]
 }
@@ -222,6 +241,7 @@ func (m *ChainVariableModal) advanceOrConfirm() (Context, tea.Cmd) {
 		m.selectedIndex++
 		return m, nil
 	}
+
 	return m.tryConfirm()
 }
 
@@ -237,6 +257,7 @@ func (m *ChainVariableModal) tryConfirm() (Context, tea.Cmd) {
 		ChainName: m.chainName,
 		Cancelled: false,
 	}
+
 	return m, func() tea.Msg { return m.result }
 }
 
@@ -249,17 +270,20 @@ func (m *ChainVariableModal) updateEditing(msg tea.Msg) (Context, tea.Cmd) {
 			m.variables[name] = m.editInput.Value()
 			m.editing = false
 			m.editInput.Blur()
+
 			return m.advanceOrConfirm()
 
 		case key.Matches(msg, key.NewBinding(key.WithKeys("esc"))):
 			m.editing = false
 			m.editInput.Blur()
+
 			return m, nil
 		}
 	}
 
 	var cmd tea.Cmd
 	m.editInput, cmd = m.editInput.Update(msg)
+
 	return m, cmd
 }
 
@@ -267,13 +291,14 @@ func (m *ChainVariableModal) updateEditing(msg tea.Msg) (Context, tea.Cmd) {
 func (m *ChainVariableModal) View() string {
 	var s strings.Builder
 
-	s.WriteString(ui.TitleStyle.Render(fmt.Sprintf("Configure Chain: %s", m.chainName)))
+	s.WriteString(ui.TitleStyle.Render("Configure Chain: " + m.chainName))
 	s.WriteString("\n")
 
 	if m.chain.Description != "" {
 		s.WriteString(ui.SubtitleStyle.Render(m.chain.Description))
 		s.WriteString("\n")
 	}
+
 	s.WriteString("\n")
 
 	s.WriteString(ui.SubtitleStyle.Render("Variables:"))
@@ -301,6 +326,7 @@ func (m *ChainVariableModal) View() string {
 		}
 
 		typeHint := ""
+
 		switch v.Type {
 		case "boolean":
 			typeHint = " [space: toggle]"
@@ -310,18 +336,20 @@ func (m *ChainVariableModal) View() string {
 
 		row := fmt.Sprintf("%s%-15s = %s", indicator, name, value)
 		s.WriteString(rowStyle.Render(row))
+
 		if i == m.selectedIndex && !m.editing {
 			s.WriteString(ui.TableDimmedStyle.Render(typeHint))
 		}
+
 		s.WriteString("\n")
 
 		if v.Description != "" && i == m.selectedIndex {
-			s.WriteString(ui.SubtitleStyle.Render(fmt.Sprintf("   %s", v.Description)))
+			s.WriteString(ui.SubtitleStyle.Render("   " + v.Description))
 			s.WriteString("\n")
 		}
 
 		if v.Type == "choice" && len(v.Options) > 0 && i == m.selectedIndex {
-			s.WriteString(ui.TableDimmedStyle.Render(fmt.Sprintf("   Options: %s", strings.Join(v.Options, ", "))))
+			s.WriteString(ui.TableDimmedStyle.Render("   Options: " + strings.Join(v.Options, ", ")))
 			s.WriteString("\n")
 		}
 	}
@@ -337,9 +365,10 @@ func (m *ChainVariableModal) View() string {
 	} else {
 		missing := m.validateRequired()
 		if len(missing) > 0 {
-			s.WriteString(ui.SelectedStyle.Render(fmt.Sprintf("Required: %s", strings.Join(missing, ", "))))
+			s.WriteString(ui.SelectedStyle.Render("Required: " + strings.Join(missing, ", ")))
 			s.WriteString("\n\n")
 		}
+
 		s.WriteString(ui.HelpStyle.Render("[↑↓] navigate  [enter/e] edit  [ctrl+r] default  [esc] cancel"))
 	}
 

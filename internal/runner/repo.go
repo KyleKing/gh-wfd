@@ -24,6 +24,7 @@ func (d defaultRepositoryDetector) Current() (Repository, error) {
 	if err != nil {
 		return Repository{}, err
 	}
+
 	return Repository{Owner: repo.Owner, Name: repo.Name}, nil
 }
 

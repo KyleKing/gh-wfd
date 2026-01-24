@@ -41,10 +41,12 @@ func defaultSelectKeyMap() selectKeyMap {
 func NewSelectModal(title string, options []string, current string, defaultVal string) *SelectModal {
 	selected := 0
 	defaultIdx := 0
+
 	for i, opt := range options {
 		if opt == current {
 			selected = i
 		}
+
 		if opt == defaultVal {
 			defaultIdx = i
 		}
@@ -79,7 +81,9 @@ func (m *SelectModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if m.selected < len(m.options) {
 				m.result = m.options[m.selected]
 			}
+
 			m.done = true
+
 			return m, func() tea.Msg {
 				return SelectResultMsg{Value: m.result}
 			}
@@ -88,6 +92,7 @@ func (m *SelectModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			return m, nil
 		}
 	}
+
 	return m, nil
 }
 
@@ -98,10 +103,12 @@ func (m *SelectModal) View() string {
 	for i, opt := range m.options {
 		cursor := "  "
 		style := ui.NormalStyle
+
 		if i == m.selected {
 			cursor = "> "
 			style = ui.SelectedStyle
 		}
+
 		s += style.Render(fmt.Sprintf("%s%s", cursor, opt))
 		if i < len(m.options)-1 {
 			s += "\n"
@@ -109,6 +116,7 @@ func (m *SelectModal) View() string {
 	}
 
 	s += "\n\n" + ui.HelpStyle.Render("[↑↓] navigate  [enter] select  [ctrl+r] default  [esc] cancel")
+
 	return s
 }
 

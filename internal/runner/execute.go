@@ -29,11 +29,13 @@ func (e defaultCommandExecutor) Execute(name string, args ...string) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
+
 		return cmd.Run()
 	}
 
 	// When using an injected executor (e.g., for testing), use it
 	_, _, err := e.executor.Execute(name, args...)
+
 	return err
 }
 
@@ -65,6 +67,7 @@ func BuildArgs(cfg RunConfig) []string {
 // FormatCommand returns a human-readable command string.
 func FormatCommand(args []string) string {
 	quoted := make([]string, len(args))
+
 	for i, arg := range args {
 		if strings.Contains(arg, " ") || strings.Contains(arg, "=") {
 			quoted[i] = fmt.Sprintf("%q", arg)
@@ -72,6 +75,7 @@ func FormatCommand(args []string) string {
 			quoted[i] = arg
 		}
 	}
+
 	return "gh " + strings.Join(quoted, " ")
 }
 

@@ -27,12 +27,15 @@ func TestNewExecutor(t *testing.T) {
 	if state.ChainName != "test-chain" {
 		t.Errorf("ChainName: got %q, want %q", state.ChainName, "test-chain")
 	}
+
 	if state.Status != chain.ChainPending {
 		t.Errorf("Status: got %v, want %v", state.Status, chain.ChainPending)
 	}
+
 	if len(state.StepStatuses) != 2 {
 		t.Errorf("StepStatuses length: got %d, want 2", len(state.StepStatuses))
 	}
+
 	for i, status := range state.StepStatuses {
 		if status != chain.StepPending {
 			t.Errorf("StepStatuses[%d]: got %v, want %v", i, status, chain.StepPending)
@@ -43,6 +46,7 @@ func TestNewExecutor(t *testing.T) {
 func TestChainExecutor_Stop(t *testing.T) {
 	mockExec := exec.NewMockExecutor()
 	runner.SetExecutor(mockExec)
+
 	defer runner.SetExecutor(nil)
 
 	client := testutil.NewMockGitHubClient()
@@ -99,9 +103,11 @@ func TestNewExecutorFromHistory(t *testing.T) {
 	if state.CurrentStep != 1 {
 		t.Errorf("CurrentStep: got %d, want 1", state.CurrentStep)
 	}
+
 	if state.StepStatuses[0] != chain.StepCompleted {
 		t.Errorf("StepStatuses[0]: got %v, want %v", state.StepStatuses[0], chain.StepCompleted)
 	}
+
 	if state.StepStatuses[1] != chain.StepPending {
 		t.Errorf("StepStatuses[1]: got %v, want %v", state.StepStatuses[1], chain.StepPending)
 	}

@@ -129,6 +129,7 @@ func (m *mockCommandRunner) RunCommand(_ context.Context, _ ...string) ([]byte, 
 	if m.err != nil {
 		return nil, m.err
 	}
+
 	return m.output, nil
 }
 

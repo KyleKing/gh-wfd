@@ -35,6 +35,7 @@ func (f *Fetcher) FetchStepLogs(runID int64, workflow string) ([]*StepLogs, erro
 	}
 
 	var allStepLogs []*StepLogs
+
 	stepIndex := 0
 
 	for _, job := range jobs {
@@ -68,7 +69,7 @@ func (f *Fetcher) generateSyntheticLogs(jobName string, step github.Step) []LogE
 	entries := []LogEntry{
 		{
 			Timestamp: time.Now(),
-			Content:   fmt.Sprintf("Starting step: %s", step.Name),
+			Content:   "Starting step: " + step.Name,
 			Level:     LogLevelInfo,
 			StepName:  step.Name,
 		},
@@ -106,6 +107,7 @@ func (f *Fetcher) generateSyntheticLogs(jobName string, step github.Step) []LogE
 // Detects log levels based on common patterns.
 func ParseLogOutput(rawLogs string, stepName string) []LogEntry {
 	var entries []LogEntry
+
 	scanner := bufio.NewScanner(strings.NewReader(rawLogs))
 
 	errorPatterns := []*regexp.Regexp{
@@ -170,12 +172,15 @@ func (f *Fetcher) FetchRunSummary(runID int64) (string, error) {
 	}
 
 	var summary strings.Builder
+
 	summary.WriteString(fmt.Sprintf("Workflow Run #%d Summary\n\n", runID))
 
 	hasFailures := false
+
 	for _, job := range jobs {
 		if job.Conclusion != github.ConclusionSuccess {
 			hasFailures = true
+
 			summary.WriteString(fmt.Sprintf("Job: %s (%s)\n", job.Name, job.Conclusion))
 
 			for _, step := range job.Steps {
@@ -183,6 +188,7 @@ func (f *Fetcher) FetchRunSummary(runID int64) (string, error) {
 					summary.WriteString(fmt.Sprintf("  ✗ %s: %s\n", step.Name, step.Conclusion))
 				}
 			}
+
 			summary.WriteString("\n")
 		}
 	}

@@ -73,6 +73,7 @@ func NewRemapModal(errors []validation.ConfigValidationError, currentInputs map[
 		keys:            defaultRemapKeyMap(),
 	}
 	m.buildOptions()
+
 	return m
 }
 
@@ -103,7 +104,7 @@ func (m *RemapModal) buildOptions() {
 	// Option 3: Map to suggestion (if available)
 	if err.Suggestion != "" {
 		m.options = append(m.options, remapOption{
-			label:       fmt.Sprintf("Map to: %s", err.Suggestion),
+			label:       "Map to: " + err.Suggestion,
 			action:      RemapActionMap,
 			targetName:  err.Suggestion,
 			description: "Use suggested input name",
@@ -114,7 +115,7 @@ func (m *RemapModal) buildOptions() {
 	for name := range m.currentInputs {
 		if name != err.Suggestion && name != err.HistoricalName {
 			m.options = append(m.options, remapOption{
-				label:       fmt.Sprintf("Map to: %s", name),
+				label:       "Map to: " + name,
 				action:      RemapActionMap,
 				targetName:  name,
 				description: "Use this input instead",
@@ -154,6 +155,7 @@ func (m *RemapModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 				m.currentErrorIdx++
 				if m.currentErrorIdx >= len(m.errors) {
 					m.done = true
+
 					return m, func() tea.Msg {
 						return RemapResultMsg{Decisions: m.decisions}
 					}
@@ -162,13 +164,16 @@ func (m *RemapModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 				// Build options for next error
 				m.buildOptions()
 			}
+
 			return m, nil
 		case key.Matches(msg, m.keys.Escape):
 			m.cancelled = true
 			m.done = true
+
 			return m, nil
 		}
 	}
+
 	return m, nil
 }
 
@@ -195,14 +200,17 @@ func (m *RemapModal) View() string {
 	s.WriteString("\n")
 
 	s.WriteString(ui.NormalStyle.Render("Value: "))
+
 	if err.HistoricalValue == "" {
 		s.WriteString(ui.TableItalicStyle.Render(`("")`))
 	} else {
 		s.WriteString(ui.NormalStyle.Render(err.HistoricalValue))
 	}
+
 	s.WriteString("\n")
 
 	s.WriteString(ui.NormalStyle.Render("Status: "))
+
 	statusText := getStatusText(err.Status)
 	s.WriteString(ui.TableItalicStyle.Render(statusText))
 	s.WriteString("\n\n")
@@ -214,17 +222,21 @@ func (m *RemapModal) View() string {
 	for i, opt := range m.options {
 		cursor := "  "
 		style := ui.NormalStyle
+
 		if i == m.selected {
 			cursor = "> "
 			style = ui.SelectedStyle
 		}
+
 		s.WriteString(style.Render(fmt.Sprintf("%s%s", cursor, opt.label)))
 		s.WriteString("\n")
+
 		if opt.description != "" {
 			descStyle := ui.SubtitleStyle
 			if i == m.selected {
 				descStyle = ui.TableItalicStyle
 			}
+
 			s.WriteString("    ")
 			s.WriteString(descStyle.Render(opt.description))
 			s.WriteString("\n")
@@ -261,6 +273,7 @@ func (m *RemapModal) Result() any {
 	if m.cancelled {
 		return nil
 	}
+
 	return m.decisions
 }
 

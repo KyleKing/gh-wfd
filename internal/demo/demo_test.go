@@ -14,9 +14,11 @@ func TestNewMockConfig(t *testing.T) {
 	if cfg.Owner != "demo-org" {
 		t.Errorf("Owner = %q, want %q", cfg.Owner, "demo-org")
 	}
+
 	if cfg.Repo != "demo-repo" {
 		t.Errorf("Repo = %q, want %q", cfg.Repo, "demo-repo")
 	}
+
 	if cfg.Executor == nil {
 		t.Error("Executor should not be nil")
 	}
@@ -48,6 +50,7 @@ func TestMockExecutor_WorkflowRun(t *testing.T) {
 	if run.Status != github.StatusCompleted {
 		t.Errorf("run.Status = %q, want %q", run.Status, github.StatusCompleted)
 	}
+
 	if run.Conclusion != github.ConclusionSuccess {
 		t.Errorf("run.Conclusion = %q, want %q", run.Conclusion, github.ConclusionSuccess)
 	}
@@ -74,6 +77,7 @@ func TestMockExecutor_RunJobs(t *testing.T) {
 	if jobs[0].Name != "build" {
 		t.Errorf("jobs[0].Name = %q, want %q", jobs[0].Name, "build")
 	}
+
 	if jobs[1].Name != "test" {
 		t.Errorf("jobs[1].Name = %q, want %q", jobs[1].Name, "test")
 	}
@@ -99,12 +103,14 @@ func TestDemoWorkflows(t *testing.T) {
 	}
 
 	var deployInputs map[string]interface{}
+
 	for _, w := range workflows {
 		if w.Name == "Deploy" {
 			deployInputs = make(map[string]interface{})
 			for k, v := range w.GetInputs() {
 				deployInputs[k] = v
 			}
+
 			break
 		}
 	}

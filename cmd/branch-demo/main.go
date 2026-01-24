@@ -11,12 +11,12 @@ import (
 )
 
 type model struct {
-	branchModal  *modal.SimpleBranchModal
-	width        int
-	height       int
-	result       string
-	done         bool
-	errorMsg     string
+	branchModal *modal.SimpleBranchModal
+	width       int
+	height      int
+	result      string
+	done        bool
+	errorMsg    string
 }
 
 func initialModel() model {
@@ -53,6 +53,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.branchModal.SetSize(msg.Width, msg.Height)
+
 		return m, nil
 
 	case tea.KeyMsg:
@@ -63,6 +64,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case modal.BranchResultMsg:
 		m.result = msg.Value
 		m.done = true
+
 		return m, nil
 	}
 
@@ -75,6 +77,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if result != nil {
 				m.result = result.(string)
 			}
+
 			m.done = true
 		}
 
@@ -93,6 +96,7 @@ func (m model) View() string {
 		if m.result != "" {
 			return fmt.Sprintf("Selected branch: %s\n\nPress 'q' to quit.", m.result)
 		}
+
 		return "Cancelled.\n\nPress 'q' to quit."
 	}
 

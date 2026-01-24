@@ -21,9 +21,11 @@ func TestStore_Record(t *testing.T) {
 	if e.Workflow != "deploy.yml" {
 		t.Errorf("expected workflow 'deploy.yml', got %q", e.Workflow)
 	}
+
 	if e.Branch != "main" {
 		t.Errorf("expected branch 'main', got %q", e.Branch)
 	}
+
 	if e.RunCount != 1 {
 		t.Errorf("expected run count 1, got %d", e.RunCount)
 	}
@@ -95,7 +97,7 @@ func TestStore_TopForRepo_FilterByWorkflow(t *testing.T) {
 func TestStore_TopForRepo_Limit(t *testing.T) {
 	store := NewStore()
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		store.Record("owner/repo", "deploy.yml", "main", map[string]string{"i": string(rune('0' + i))})
 	}
 
@@ -210,9 +212,11 @@ func TestSortByFrecency(t *testing.T) {
 	if entries[0].Workflow != "high" {
 		t.Errorf("expected 'high' first, got %q", entries[0].Workflow)
 	}
+
 	if entries[1].Workflow != "medium" {
 		t.Errorf("expected 'medium' second, got %q", entries[1].Workflow)
 	}
+
 	if entries[2].Workflow != "low" {
 		t.Errorf("expected 'low' third, got %q", entries[2].Workflow)
 	}

@@ -224,9 +224,11 @@ func TestRunConfirmModal_Confirm(t *testing.T) {
 	if !ok {
 		t.Fatal("expected RunConfirmResultMsg")
 	}
+
 	if !result.Confirmed {
 		t.Error("expected confirmed=true")
 	}
+
 	if result.Config.Workflow != "test.yml" {
 		t.Errorf("expected workflow=test.yml, got %q", result.Config.Workflow)
 	}
@@ -247,6 +249,7 @@ func TestRunConfirmModal_Cancel(t *testing.T) {
 	if !ok {
 		t.Fatal("expected RunConfirmResultMsg")
 	}
+
 	if result.Confirmed {
 		t.Error("expected confirmed=false after escape")
 	}
@@ -275,12 +278,15 @@ func TestFilterModal_ApplyFilter(t *testing.T) {
 
 	msg := cmd()
 	result, ok := msg.(FilterResultMsg)
+
 	if !ok {
 		t.Fatalf("expected FilterResultMsg, got %T", msg)
 	}
+
 	if result.Cancelled {
 		t.Error("expected cancelled=false")
 	}
+
 	if result.Value != "en" {
 		t.Errorf("expected value='en', got %q", result.Value)
 	}
@@ -303,9 +309,11 @@ func TestFilterModal_Cancel(t *testing.T) {
 
 	msg := cmd()
 	result, ok := msg.(FilterResultMsg)
+
 	if !ok {
 		t.Fatalf("expected FilterResultMsg, got %T", msg)
 	}
+
 	if !result.Cancelled {
 		t.Error("expected cancelled=true")
 	}
@@ -331,9 +339,11 @@ func TestResetModal_Confirm(t *testing.T) {
 
 	msg := cmd()
 	result, ok := msg.(ResetResultMsg)
+
 	if !ok {
 		t.Fatalf("expected ResetResultMsg, got %T", msg)
 	}
+
 	if !result.Confirmed {
 		t.Error("expected confirmed=true")
 	}
@@ -356,9 +366,11 @@ func TestResetModal_Cancel(t *testing.T) {
 
 	msg := cmd()
 	result, ok := msg.(ResetResultMsg)
+
 	if !ok {
 		t.Fatalf("expected ResetResultMsg, got %T", msg)
 	}
+
 	if result.Confirmed {
 		t.Error("expected confirmed=false after escape")
 	}
@@ -398,9 +410,11 @@ func TestValidationErrorModal_Override(t *testing.T) {
 
 	msg := cmd()
 	result, ok := msg.(ValidationErrorResultMsg)
+
 	if !ok {
 		t.Fatalf("expected ValidationErrorResultMsg, got %T", msg)
 	}
+
 	if !result.Override {
 		t.Error("expected override=true")
 	}
@@ -422,6 +436,7 @@ func TestValidationErrorModal_Cancel(t *testing.T) {
 	}
 
 	result := modal.Result()
+
 	resultMsg, ok := result.(ValidationErrorResultMsg)
 	if ok && resultMsg.Override {
 		t.Error("expected override=false after escape")

@@ -2,7 +2,7 @@ package github_test
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -53,6 +53,7 @@ func TestNewClientWithExecutor(t *testing.T) {
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
+
 				return
 			}
 
@@ -117,7 +118,7 @@ func TestClient_GetWorkflowRun(t *testing.T) {
 			runID: 99999,
 			setupMock: func(m *exec.MockExecutor) {
 				m.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/99999"},
-					"", "HTTP 404: Not Found", fmt.Errorf("exit status 1"))
+					"", "HTTP 404: Not Found", errors.New("exit status 1"))
 			},
 			expectError: true,
 		},
@@ -148,6 +149,7 @@ func TestClient_GetWorkflowRun(t *testing.T) {
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
+
 				return
 			}
 
@@ -231,7 +233,7 @@ func TestClient_GetWorkflowRunJobs(t *testing.T) {
 			runID: 99999,
 			setupMock: func(m *exec.MockExecutor) {
 				m.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/99999/jobs"},
-					"", "HTTP 500: Internal Server Error", fmt.Errorf("exit status 1"))
+					"", "HTTP 500: Internal Server Error", errors.New("exit status 1"))
 			},
 			expectError: true,
 		},
@@ -253,6 +255,7 @@ func TestClient_GetWorkflowRunJobs(t *testing.T) {
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
+
 				return
 			}
 
@@ -322,7 +325,7 @@ func TestClient_GetLatestRun(t *testing.T) {
 			workflowName: "ci.yml",
 			setupMock: func(m *exec.MockExecutor) {
 				m.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs?per_page=1&workflow=ci.yml"},
-					"", "HTTP 403: rate limit exceeded", fmt.Errorf("exit status 1"))
+					"", "HTTP 403: rate limit exceeded", errors.New("exit status 1"))
 			},
 			expectError: true,
 		},
@@ -344,6 +347,7 @@ func TestClient_GetLatestRun(t *testing.T) {
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
+
 				return
 			}
 
@@ -355,6 +359,7 @@ func TestClient_GetLatestRun(t *testing.T) {
 				if run != nil {
 					t.Errorf("expected nil run, got %+v", run)
 				}
+
 				return
 			}
 

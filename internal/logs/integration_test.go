@@ -1,6 +1,7 @@
 package logs_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -80,12 +81,14 @@ func TestIntegration_SuccessfulWorkflowRun(t *testing.T) {
 	}
 
 	foundCheckout := false
+
 	for _, entry := range stepLogs[0].Entries {
 		if entry.Content == "##[group]Run actions/checkout@v4" {
 			foundCheckout = true
 			break
 		}
 	}
+
 	if !foundCheckout {
 		t.Error("expected to find checkout log entry")
 	}
@@ -102,6 +105,7 @@ func TestIntegration_SuccessfulWorkflowRun(t *testing.T) {
 		if apiCmd.Name != "gh" {
 			t.Errorf("command 0 name: got %q, want %q", apiCmd.Name, "gh")
 		}
+
 		if len(apiCmd.Args) >= 1 && apiCmd.Args[0] != "api" {
 			t.Errorf("command 0 args[0]: got %q, want %q", apiCmd.Args[0], "api")
 		}
@@ -113,6 +117,7 @@ func TestIntegration_SuccessfulWorkflowRun(t *testing.T) {
 		if runCmd.Name != "gh" {
 			t.Errorf("command 1 name: got %q, want %q", runCmd.Name, "gh")
 		}
+
 		if len(runCmd.Args) >= 1 && runCmd.Args[0] != "run" {
 			t.Errorf("command 1 args[0]: got %q, want %q", runCmd.Args[0], "run")
 		}
@@ -167,10 +172,12 @@ func TestIntegration_FailedWorkflowRun(t *testing.T) {
 	// Assert: Check for error detection in any step
 	hasFailedStep := false
 	hasErrorLog := false
+
 	for _, step := range stepLogs {
 		if step.Conclusion == github.ConclusionFailure {
 			hasFailedStep = true
 		}
+
 		for _, entry := range step.Entries {
 			if entry.Level == logs.LogLevelError {
 				hasErrorLog = true
@@ -178,21 +185,25 @@ func TestIntegration_FailedWorkflowRun(t *testing.T) {
 			}
 		}
 	}
+
 	if !hasFailedStep {
 		t.Error("expected to find at least one failed step")
 	}
+
 	if !hasErrorLog {
 		t.Error("expected to find error-level log entries")
 	}
 
 	// Verify at least one step was skipped
 	hasSkippedStep := false
+
 	for _, step := range stepLogs {
 		if step.Conclusion == github.ConclusionSkipped {
 			hasSkippedStep = true
 			break
 		}
 	}
+
 	if !hasSkippedStep {
 		t.Error("expected to find at least one skipped step")
 	}
@@ -246,6 +257,7 @@ func TestIntegration_WorkflowWithWarnings(t *testing.T) {
 
 	// Assert: Check for warning detection
 	hasWarning := false
+
 	for _, step := range stepLogs {
 		for _, entry := range step.Entries {
 			if entry.Level == logs.LogLevelWarning {
@@ -254,6 +266,7 @@ func TestIntegration_WorkflowWithWarnings(t *testing.T) {
 			}
 		}
 	}
+
 	if !hasWarning {
 		t.Error("expected to find warning-level log entries")
 	}
@@ -285,7 +298,7 @@ func TestIntegration_GHCLIError(t *testing.T) {
 	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12348/jobs"}, jobsJSON, "", nil)
 
 	// Simulate gh CLI error (e.g., network timeout, auth failure)
-	mockExec.AddGHRunViewError(runID, jobID, "HTTP 401: Bad credentials", fmt.Errorf("exit status 1"))
+	mockExec.AddGHRunViewError(runID, jobID, "HTTP 401: Bad credentials", errors.New("exit status 1"))
 
 	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
@@ -323,7 +336,7 @@ func TestIntegration_GitHubAPIError(t *testing.T) {
 
 	// Mock gh api error response (e.g., rate limiting, server error)
 	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/12349/jobs"},
-		"", "HTTP 500: Internal Server Error", fmt.Errorf("exit status 1"))
+		"", "HTTP 500: Internal Server Error", errors.New("exit status 1"))
 
 	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
@@ -363,7 +376,7 @@ func TestIntegration_CheckGHCLIAvailable(t *testing.T) {
 		{
 			name: "gh not installed",
 			setupMock: func(m *exec.MockExecutor) {
-				m.AddCommand("gh", []string{"--version"}, "", "command not found", fmt.Errorf("exit status 127"))
+				m.AddCommand("gh", []string{"--version"}, "", "command not found", errors.New("exit status 127"))
 			},
 			expectError: true,
 		},
@@ -371,7 +384,7 @@ func TestIntegration_CheckGHCLIAvailable(t *testing.T) {
 			name: "gh not authenticated",
 			setupMock: func(m *exec.MockExecutor) {
 				m.AddCommand("gh", []string{"--version"}, "gh version 2.40.0", "", nil)
-				m.AddCommand("gh", []string{"auth", "status"}, "", "You are not logged in", fmt.Errorf("exit status 1"))
+				m.AddCommand("gh", []string{"auth", "status"}, "", "You are not logged in", errors.New("exit status 1"))
 			},
 			expectError: true,
 		},
@@ -387,6 +400,7 @@ func TestIntegration_CheckGHCLIAvailable(t *testing.T) {
 			if tt.expectError && err == nil {
 				t.Error("expected error, got nil")
 			}
+
 			if !tt.expectError && err != nil {
 				t.Errorf("expected no error, got: %v", err)
 			}
@@ -451,14 +465,17 @@ func TestIntegration_MultiJobWorkflowRun(t *testing.T) {
 
 	// Verify test step has entries (actual content parsing depends on log format)
 	foundTestStep := false
+
 	for _, step := range stepLogs {
 		if step.StepName == "Run tests" {
 			foundTestStep = true
+
 			if len(step.Entries) == 0 {
 				t.Error("expected 'Run tests' step to have log entries")
 			}
 		}
 	}
+
 	if !foundTestStep {
 		t.Error("expected to find 'Run tests' step")
 	}
@@ -533,6 +550,7 @@ func TestIntegration_LogStreaming(t *testing.T) {
 	if step0Entries == 0 {
 		t.Error("poll 1: step 0 should have log entries")
 	}
+
 	if step1Entries == 0 {
 		t.Error("poll 1: step 1 should have log entries")
 	}
@@ -630,6 +648,7 @@ func TestIntegration_LogStreaming(t *testing.T) {
 		if step.Status != github.StatusCompleted {
 			t.Errorf("poll 3: step %d status: got %q, want %q", i, step.Status, github.StatusCompleted)
 		}
+
 		if step.Conclusion != github.ConclusionSuccess {
 			t.Errorf("poll 3: step %d conclusion: got %q, want %q", i, step.Conclusion, github.ConclusionSuccess)
 		}
@@ -666,6 +685,7 @@ func TestIntegration_LogStreamer_IncrementalDetection(t *testing.T) {
 	mockExec.AddCommand("gh", []string{"api", "repos/owner/repo/actions/runs/77777"},
 		`{"id":77777,"name":"Test","status":"in_progress","conclusion":"","html_url":"https://github.com/owner/repo/actions/runs/77777","updated_at":"2024-01-01T12:00:00Z"}`,
 		"", nil)
+
 	poll1Logs := loadFixture(t, "streaming_poll_1.txt")
 	mockExec.AddGHRunView(runID, jobID, poll1Logs)
 
@@ -811,6 +831,7 @@ func TestIntegration_UnicodeCharacters(t *testing.T) {
 
 	// Verify unicode characters were preserved
 	foundUnicode := false
+
 	for _, step := range stepLogs {
 		for _, entry := range step.Entries {
 			if strings.Contains(entry.Content, "🚀") ||
@@ -874,6 +895,7 @@ func TestIntegration_ANSIColorCodes(t *testing.T) {
 
 	// Verify ANSI codes are either preserved or stripped consistently
 	foundANSI := false
+
 	for _, step := range stepLogs {
 		for _, entry := range step.Entries {
 			if strings.Contains(entry.Content, "\x1b[") {
@@ -915,7 +937,7 @@ func TestIntegration_NetworkTimeout(t *testing.T) {
 
 	// Simulate timeout by adding command that returns context error
 	mockExec.AddCommand("gh", []string{"api", fmt.Sprintf("repos/owner/repo/actions/runs/%d/jobs", runID)},
-		"", "context deadline exceeded", fmt.Errorf("context deadline exceeded"))
+		"", "context deadline exceeded", errors.New("context deadline exceeded"))
 
 	client, err := github.NewClientWithExecutor("owner/repo", mockExec)
 	if err != nil {
@@ -1082,9 +1104,11 @@ func TestIntegration_MixedLogContent(t *testing.T) {
 // loadFixture loads a test fixture file from testdata/logs/.
 func loadFixture(t *testing.T, filename string) string {
 	t.Helper()
-	data, err := os.ReadFile(fmt.Sprintf("../../testdata/logs/%s", filename))
+
+	data, err := os.ReadFile("../../testdata/logs/" + filename)
 	if err != nil {
 		t.Fatalf("failed to load fixture %s: %v", filename, err)
 	}
+
 	return string(data)
 }

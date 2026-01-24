@@ -19,9 +19,11 @@ func (m *mockGitHubClient) GetWorkflowRun(runID int64) (*github.WorkflowRun, err
 	if m.err != nil {
 		return nil, m.err
 	}
+
 	if run, ok := m.runs[runID]; ok {
 		return run, nil
 	}
+
 	return &github.WorkflowRun{ID: runID, Status: github.StatusQueued}, nil
 }
 
@@ -29,20 +31,24 @@ func (m *mockGitHubClient) GetWorkflowRunJobs(runID int64) ([]github.Job, error)
 	if m.err != nil {
 		return nil, m.err
 	}
+
 	return m.jobs[runID], nil
 }
 
 func TestNewWatcher(t *testing.T) {
 	client := &mockGitHubClient{}
+
 	w := watcher.NewWatcher(client)
 	if w == nil {
 		t.Fatal("expected non-nil watcher")
 	}
+
 	defer w.Stop()
 
 	if w.TotalCount() != 0 {
 		t.Errorf("TotalCount: got %d, want 0", w.TotalCount())
 	}
+
 	if w.ActiveCount() != 0 {
 		t.Errorf("ActiveCount: got %d, want 0", w.ActiveCount())
 	}
@@ -54,6 +60,7 @@ func TestWatch_AddsRun(t *testing.T) {
 			123: {ID: 123, Name: "test-workflow", Status: github.StatusQueued},
 		},
 	}
+
 	w := watcher.NewWatcher(client)
 	defer w.Stop()
 
@@ -67,6 +74,7 @@ func TestWatch_AddsRun(t *testing.T) {
 	if !ok {
 		t.Fatal("expected to find run 123")
 	}
+
 	if run.RunID != 123 {
 		t.Errorf("RunID: got %d, want 123", run.RunID)
 	}
@@ -78,6 +86,7 @@ func TestUnwatch_RemovesRun(t *testing.T) {
 			123: {ID: 123, Name: "test-workflow", Status: github.StatusQueued},
 		},
 	}
+
 	w := watcher.NewWatcher(client)
 	defer w.Stop()
 
@@ -103,6 +112,7 @@ func TestPollRun_UpdatesState(t *testing.T) {
 			123: {{Name: "build", Status: github.StatusInProgress}},
 		},
 	}
+
 	w := watcher.NewWatcher(client)
 	defer w.Stop()
 
@@ -113,6 +123,7 @@ func TestPollRun_UpdatesState(t *testing.T) {
 		if update.Error != nil {
 			t.Fatalf("unexpected error: %v", update.Error)
 		}
+
 		if update.RunID != 123 {
 			t.Errorf("RunID: got %d, want 123", update.RunID)
 		}
@@ -124,6 +135,7 @@ func TestPollRun_UpdatesState(t *testing.T) {
 func TestPollRun_SurfacesError(t *testing.T) {
 	expectedErr := errors.New("API error")
 	client := &mockGitHubClient{err: expectedErr}
+
 	w := watcher.NewWatcher(client)
 	defer w.Stop()
 
@@ -134,6 +146,7 @@ func TestPollRun_SurfacesError(t *testing.T) {
 		if update.Error == nil {
 			t.Error("expected error in update")
 		}
+
 		if !errors.Is(update.Error, expectedErr) {
 			t.Errorf("error: got %v, want %v", update.Error, expectedErr)
 		}
@@ -150,6 +163,7 @@ func TestClearCompleted(t *testing.T) {
 			3: {ID: 3, Name: "run3", Status: github.StatusCompleted, Conclusion: github.ConclusionFailure},
 		},
 	}
+
 	w := watcher.NewWatcher(client)
 	defer w.Stop()
 
@@ -179,6 +193,7 @@ func TestActiveCount(t *testing.T) {
 			3: {ID: 3, Name: "run3", Status: github.StatusQueued},
 		},
 	}
+
 	w := watcher.NewWatcher(client)
 	defer w.Stop()
 

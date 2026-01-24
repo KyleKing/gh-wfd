@@ -15,15 +15,16 @@ func GenerateRunLogsWithEntries(totalEntries int) *RunLogs {
 	entriesPerStep := 100
 	numSteps := (totalEntries + entriesPerStep - 1) / entriesPerStep
 
-	for i := 0; i < numSteps; i++ {
+	for i := range numSteps {
 		stepEntries := make([]LogEntry, 0, entriesPerStep)
 		remaining := totalEntries - (i * entriesPerStep)
 		thisStepEntries := entriesPerStep
+
 		if remaining < entriesPerStep {
 			thisStepEntries = remaining
 		}
 
-		for j := 0; j < thisStepEntries; j++ {
+		for j := range thisStepEntries {
 			level := LogLevelInfo
 			if j%10 == 0 {
 				level = LogLevelError
@@ -70,13 +71,14 @@ func GenerateLargeLogFixture(lines int) string {
 		"Completed step %d of %d",
 	}
 
-	for i := 0; i < lines; i++ {
+	for i := range lines {
 		template := templates[i%len(templates)]
 		if strings.Contains(template, "%d") {
 			sb.WriteString(fmt.Sprintf(template, i))
 		} else {
 			sb.WriteString(template)
 		}
+
 		sb.WriteString("\n")
 	}
 
@@ -88,7 +90,7 @@ func GenerateLargeLogFixture(lines int) string {
 func GenerateLargeLogWithErrors(lines int, errorRate float64) string {
 	var sb strings.Builder
 
-	for i := 0; i < lines; i++ {
+	for i := range lines {
 		if float64(i%100) < errorRate*100 {
 			sb.WriteString(fmt.Sprintf("##[error]Error on line %d: operation failed\n", i))
 		} else if float64(i%100) < (errorRate+0.1)*100 {
@@ -140,7 +142,7 @@ func GenerateMixedLog(lines int) string {
 		"Test failed ✗",
 	}
 
-	for i := 0; i < lines; i++ {
+	for i := range lines {
 		pattern := patterns[i%len(patterns)]
 		sb.WriteString(fmt.Sprintf("%s %d\n", pattern, i))
 	}
@@ -153,7 +155,7 @@ func GenerateMixedLog(lines int) string {
 func GenerateLogWithTimestamps(lines int) string {
 	var sb strings.Builder
 
-	for i := 0; i < lines; i++ {
+	for i := range lines {
 		timestamp := fmt.Sprintf("2024-01-01T12:%02d:%02d.000Z", i/60%60, i%60)
 		sb.WriteString(fmt.Sprintf("%s INFO: Log line %d\n", timestamp, i))
 	}
@@ -166,10 +168,10 @@ func GenerateLogWithTimestamps(lines int) string {
 func GenerateMultiStepLog(numSteps int, linesPerStep int) string {
 	var sb strings.Builder
 
-	for i := 0; i < numSteps; i++ {
+	for i := range numSteps {
 		sb.WriteString(fmt.Sprintf("##[group]Run step-%d\n", i))
 
-		for j := 0; j < linesPerStep; j++ {
+		for j := range linesPerStep {
 			if j%20 == 0 {
 				sb.WriteString(fmt.Sprintf("##[error]Error in step %d line %d\n", i, j))
 			} else if j%10 == 0 {
@@ -192,9 +194,9 @@ func LoadFixture(tb testing.TB, filename string) string {
 
 	// Try multiple paths for flexibility
 	paths := []string{
-		fmt.Sprintf("../../testdata/logs/%s", filename),
-		fmt.Sprintf("testdata/logs/%s", filename),
-		fmt.Sprintf("../testdata/logs/%s", filename),
+		"../../testdata/logs/" + filename,
+		"testdata/logs/" + filename,
+		"../testdata/logs/" + filename,
 	}
 
 	for _, path := range paths {
@@ -205,5 +207,6 @@ func LoadFixture(tb testing.TB, filename string) string {
 	}
 
 	tb.Fatalf("failed to load fixture %s from any path", filename)
+
 	return ""
 }

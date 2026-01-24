@@ -26,6 +26,7 @@ func NewFilter(config *FilterConfig) (*Filter, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		f.regex = regex
 	}
 
@@ -139,6 +140,7 @@ func (f *Filter) findMatches(content string) []MatchPosition {
 		}
 
 		start := 0
+
 		for {
 			idx := strings.Index(searchContent[start:], searchTerm)
 			if idx == -1 {
@@ -170,6 +172,7 @@ func (fr *FilteredResult) TotalEntries() int {
 	for _, step := range fr.Steps {
 		total += len(step.Entries)
 	}
+
 	return total
 }
 

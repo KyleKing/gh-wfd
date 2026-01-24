@@ -18,6 +18,7 @@ func TestDiscover(t *testing.T) {
 
 	if len(workflows) != 8 {
 		t.Errorf("expected 8 dispatchable workflows, got %d", len(workflows))
+
 		for _, wf := range workflows {
 			t.Logf("  found: %s", wf.Filename)
 		}
@@ -31,6 +32,7 @@ func TestDiscover(t *testing.T) {
 	if filenames["ci.yml"] {
 		t.Error("ci.yml should not be included (not dispatchable)")
 	}
+
 	if filenames["not-dispatchable.yml"] {
 		t.Error("not-dispatchable.yml should not be included")
 	}

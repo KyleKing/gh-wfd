@@ -16,7 +16,7 @@ func BenchmarkFilter_Apply_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -33,7 +33,7 @@ func BenchmarkFilter_Apply_50kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -52,7 +52,7 @@ func BenchmarkFilter_SearchTerm_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -71,7 +71,7 @@ func BenchmarkFilter_RegexSearch_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -90,7 +90,7 @@ func BenchmarkFilter_RegexSearch_50kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -109,7 +109,7 @@ func BenchmarkFilter_CombinedFilters_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -127,7 +127,7 @@ func BenchmarkFilter_FindMatches_SimpleString(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.findMatches(content)
 	}
 }
@@ -145,7 +145,7 @@ func BenchmarkFilter_FindMatches_Regex(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.findMatches(content)
 	}
 }
@@ -154,7 +154,7 @@ func BenchmarkFilter_NewFilter_Regex(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		config := &FilterConfig{
 			SearchTerm:    `\b(error|warning|failed)\b`,
 			Regex:         true,
@@ -175,7 +175,7 @@ func BenchmarkFilter_StepIndexFilter_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -195,7 +195,7 @@ func BenchmarkFilteredResult_TotalEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		result.TotalEntries()
 	}
 }
@@ -214,7 +214,7 @@ func BenchmarkFilter_CaseSensitiveSearch_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }
@@ -230,7 +230,7 @@ func BenchmarkFilter_WarningsFilter_10kEntries(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		filter.Apply(runLogs)
 	}
 }

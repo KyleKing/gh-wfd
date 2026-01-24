@@ -5,36 +5,119 @@ import (
 	"testing"
 )
 
+// mockCmd is a mock command runner that doesn't actually execute anything.
+type mockCmd struct {
+	name string
+	args []string
+	err  error
+}
+
+func (m *mockCmd) Start() error {
+	return m.err
+}
+
+// mockExecCommand creates a mock command runner for testing.
+func mockExecCommand(name string, args ...string) cmdRunner {
+	return &mockCmd{
+		name: name,
+		args: args,
+		err:  nil,
+	}
+}
+
+// mockExecCommandWithError creates a mock command runner that returns an error.
+func mockExecCommandWithError(err error) func(string, ...string) cmdRunner {
+	return func(name string, args ...string) cmdRunner {
+		return &mockCmd{
+			name: name,
+			args: args,
+			err:  err,
+		}
+	}
+}
+
 func TestOpen(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping browser test in short mode")
+	// Save original and restore after test
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
+
+	var capturedCmd *mockCmd
+	execCommand = func(name string, args ...string) cmdRunner {
+		cmd := &mockCmd{name: name, args: args}
+		capturedCmd = cmd
+		return cmd
 	}
 
-	// Test with a valid URL
-	// Note: This won't actually open a browser in CI, but will verify the command
-	// can be constructed and started without error
 	url := "https://example.com"
-
 	err := Open(url)
+
 	if err != nil {
 		t.Errorf("Open failed: %v", err)
+	}
+
+	if capturedCmd == nil {
+		t.Fatal("expected command to be executed")
+	}
+
+	// Verify correct command based on OS
+	switch runtime.GOOS {
+	case "darwin":
+		if capturedCmd.name != "open" {
+			t.Errorf("expected command 'open', got '%s'", capturedCmd.name)
+		}
+		if len(capturedCmd.args) != 1 || capturedCmd.args[0] != url {
+			t.Errorf("expected args [%s], got %v", url, capturedCmd.args)
+		}
+	case "linux":
+		if capturedCmd.name != "xdg-open" {
+			t.Errorf("expected command 'xdg-open', got '%s'", capturedCmd.name)
+		}
+		if len(capturedCmd.args) != 1 || capturedCmd.args[0] != url {
+			t.Errorf("expected args [%s], got %v", url, capturedCmd.args)
+		}
+	case "windows":
+		if capturedCmd.name != "cmd" {
+			t.Errorf("expected command 'cmd', got '%s'", capturedCmd.name)
+		}
+		expectedArgs := []string{"/c", "start", url}
+		if len(capturedCmd.args) != len(expectedArgs) {
+			t.Errorf("expected args %v, got %v", expectedArgs, capturedCmd.args)
+		}
 	}
 }
 
 func TestOpen_InvalidURL(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping browser test in short mode")
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
+
+	var capturedCmd *mockCmd
+	execCommand = func(name string, args ...string) cmdRunner {
+		cmd := &mockCmd{name: name, args: args}
+		capturedCmd = cmd
+		return cmd
 	}
 
-	// Test with an invalid URL format
-	// The browser command may still succeed since it's just passed to the shell
 	url := "not a valid url"
-
 	err := Open(url)
-	// We don't expect an error here because the command starts successfully
-	// even with an invalid URL - the browser will handle the invalid URL
+
 	if err != nil {
-		t.Logf("Open with invalid URL returned error (expected in some cases): %v", err)
+		t.Errorf("Open failed: %v", err)
+	}
+
+	if capturedCmd == nil {
+		t.Fatal("expected command to be executed")
+	}
+
+	// Verify the URL was passed to the command (validation happens at browser level)
+	found := false
+	for _, arg := range capturedCmd.args {
+		if arg == url {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected URL '%s' in args %v", url, capturedCmd.args)
 	}
 }
 
@@ -43,8 +126,14 @@ func TestOpen_Darwin(t *testing.T) {
 		t.Skip("skipping macOS-specific test")
 	}
 
-	if testing.Short() {
-		t.Skip("skipping browser test in short mode")
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
+
+	var capturedCmd *mockCmd
+	execCommand = func(name string, args ...string) cmdRunner {
+		cmd := &mockCmd{name: name, args: args}
+		capturedCmd = cmd
+		return cmd
 	}
 
 	url := "https://example.com"
@@ -53,6 +142,18 @@ func TestOpen_Darwin(t *testing.T) {
 	if err != nil {
 		t.Errorf("Open on macOS failed: %v", err)
 	}
+
+	if capturedCmd == nil {
+		t.Fatal("expected command to be executed")
+	}
+
+	if capturedCmd.name != "open" {
+		t.Errorf("expected command 'open' on macOS, got '%s'", capturedCmd.name)
+	}
+
+	if len(capturedCmd.args) != 1 || capturedCmd.args[0] != url {
+		t.Errorf("expected args [%s], got %v", url, capturedCmd.args)
+	}
 }
 
 func TestOpen_Linux(t *testing.T) {
@@ -60,8 +161,14 @@ func TestOpen_Linux(t *testing.T) {
 		t.Skip("skipping Linux-specific test")
 	}
 
-	if testing.Short() {
-		t.Skip("skipping browser test in short mode")
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
+
+	var capturedCmd *mockCmd
+	execCommand = func(name string, args ...string) cmdRunner {
+		cmd := &mockCmd{name: name, args: args}
+		capturedCmd = cmd
+		return cmd
 	}
 
 	url := "https://example.com"
@@ -70,6 +177,18 @@ func TestOpen_Linux(t *testing.T) {
 	if err != nil {
 		t.Errorf("Open on Linux failed: %v", err)
 	}
+
+	if capturedCmd == nil {
+		t.Fatal("expected command to be executed")
+	}
+
+	if capturedCmd.name != "xdg-open" {
+		t.Errorf("expected command 'xdg-open' on Linux, got '%s'", capturedCmd.name)
+	}
+
+	if len(capturedCmd.args) != 1 || capturedCmd.args[0] != url {
+		t.Errorf("expected args [%s], got %v", url, capturedCmd.args)
+	}
 }
 
 func TestOpen_Windows(t *testing.T) {
@@ -77,8 +196,14 @@ func TestOpen_Windows(t *testing.T) {
 		t.Skip("skipping Windows-specific test")
 	}
 
-	if testing.Short() {
-		t.Skip("skipping browser test in short mode")
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
+
+	var capturedCmd *mockCmd
+	execCommand = func(name string, args ...string) cmdRunner {
+		cmd := &mockCmd{name: name, args: args}
+		capturedCmd = cmd
+		return cmd
 	}
 
 	url := "https://example.com"
@@ -87,17 +212,57 @@ func TestOpen_Windows(t *testing.T) {
 	if err != nil {
 		t.Errorf("Open on Windows failed: %v", err)
 	}
+
+	if capturedCmd == nil {
+		t.Fatal("expected command to be executed")
+	}
+
+	if capturedCmd.name != "cmd" {
+		t.Errorf("expected command 'cmd' on Windows, got '%s'", capturedCmd.name)
+	}
+
+	expectedArgs := []string{"/c", "start", url}
+	if len(capturedCmd.args) != len(expectedArgs) {
+		t.Errorf("expected args %v, got %v", expectedArgs, capturedCmd.args)
+	} else {
+		for i, expected := range expectedArgs {
+			if capturedCmd.args[i] != expected {
+				t.Errorf("arg[%d]: expected '%s', got '%s'", i, expected, capturedCmd.args[i])
+			}
+		}
+	}
 }
 
 func TestOpen_EmptyURL(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping browser test in short mode")
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
+
+	var capturedCmd *mockCmd
+	execCommand = func(name string, args ...string) cmdRunner {
+		cmd := &mockCmd{name: name, args: args}
+		capturedCmd = cmd
+		return cmd
 	}
 
 	err := Open("")
 
-	// Empty URL should still work - command will start
 	if err != nil {
-		t.Logf("Open with empty URL returned error: %v", err)
+		t.Errorf("Open failed: %v", err)
+	}
+
+	if capturedCmd == nil {
+		t.Fatal("expected command to be executed")
+	}
+
+	// Verify empty URL is passed to command
+	found := false
+	for _, arg := range capturedCmd.args {
+		if arg == "" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected empty URL in args %v", capturedCmd.args)
 	}
 }

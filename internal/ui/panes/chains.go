@@ -1,8 +1,8 @@
 package panes
 
 import (
-	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -29,9 +29,11 @@ func NewChainListModel() ChainListModel {
 func (m *ChainListModel) SetChains(chains map[string]config.Chain) {
 	m.chains = chains
 	m.chainNames = make([]string, 0, len(chains))
+
 	for name := range chains {
 		m.chainNames = append(m.chainNames, name)
 	}
+
 	sort.Strings(m.chainNames)
 }
 
@@ -65,7 +67,9 @@ func (m ChainListModel) SelectedChain() (string, config.Chain, bool) {
 	if len(m.chainNames) == 0 {
 		return "", config.Chain{}, false
 	}
+
 	name := m.chainNames[m.selectedIndex]
+
 	return name, m.chains[name], true
 }
 
@@ -78,6 +82,7 @@ func (m ChainListModel) Update(msg tea.Msg) (ChainListModel, tea.Cmd) {
 func (m ChainListModel) ViewContent() string {
 	if len(m.chainNames) == 0 {
 		var content strings.Builder
+
 		content.WriteString(ui.SubtitleStyle.Render("No chains configured"))
 		content.WriteString("\n\n")
 		content.WriteString(ui.NormalStyle.Render("Chains let you run multiple"))
@@ -95,6 +100,7 @@ func (m ChainListModel) ViewContent() string {
 		content.WriteString(ui.CLIPreviewStyle.Render("        - workflow: build.yml"))
 		content.WriteString("\n")
 		content.WriteString(ui.CLIPreviewStyle.Render("        - workflow: deploy.yml"))
+
 		return content.String()
 	}
 
@@ -110,8 +116,9 @@ func (m ChainListModel) ViewContent() string {
 		varCount := len(chain.Variables)
 
 		displayName := ui.TruncateWithEllipsis(name, 15)
-		steps := fmt.Sprintf("%d", stepCount)
-		vars := fmt.Sprintf("%d", varCount)
+		steps := strconv.Itoa(stepCount)
+		vars := strconv.Itoa(varCount)
+
 		desc := ui.TruncateWithEllipsis(chain.Description, 20)
 		if desc == "" {
 			desc = "(no description)"
@@ -130,10 +137,12 @@ func (m ChainListModel) ViewContent() string {
 		}
 
 		content.WriteString(rowStyle.Render(row))
+
 		if i < len(m.chainNames)-1 {
 			content.WriteString("\n")
 		}
 	}
+
 	return content.String()
 }
 
@@ -141,5 +150,6 @@ func (m ChainListModel) ViewContent() string {
 func (m ChainListModel) View() string {
 	style := ui.PaneStyle(m.width, m.height, m.focused)
 	title := ui.TitleStyle.Render("Chains")
+
 	return style.Render(title + "\n" + m.ViewContent())
 }

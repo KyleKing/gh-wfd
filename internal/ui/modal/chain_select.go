@@ -38,6 +38,7 @@ func defaultChainSelectKeyMap() chainSelectKeyMap {
 // NewChainSelectModal creates a new chain selection modal.
 func NewChainSelectModal(cfg *config.WfdConfig) *ChainSelectModal {
 	names := cfg.ChainNames()
+
 	return &ChainSelectModal{
 		chains: cfg.Chains,
 		names:  names,
@@ -63,6 +64,7 @@ func (m *ChainSelectModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if m.selected >= 0 && m.selected < len(m.names) {
 				name := m.names[m.selected]
 				chain := m.chains[name]
+
 				return m, func() tea.Msg {
 					return ChainSelectResultMsg{
 						ChainName: name,
@@ -74,6 +76,7 @@ func (m *ChainSelectModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			m.done = true
 		}
 	}
+
 	return m, nil
 }
 
@@ -88,11 +91,13 @@ func (m *ChainSelectModal) View() string {
 		s.WriteString(ui.SubtitleStyle.Render("No chains defined"))
 		s.WriteString("\n\n")
 		s.WriteString(ui.HelpStyle.Render("Press Esc to close"))
+
 		return s.String()
 	}
 
 	for i, name := range m.names {
 		chain := m.chains[name]
+
 		prefix := "  "
 		if i == m.selected {
 			prefix = "> "
@@ -100,8 +105,9 @@ func (m *ChainSelectModal) View() string {
 
 		line := fmt.Sprintf("%s%s", prefix, name)
 		if chain.Description != "" {
-			line += fmt.Sprintf(" - %s", chain.Description)
+			line += " - " + chain.Description
 		}
+
 		line += fmt.Sprintf(" (%d steps)", len(chain.Steps))
 
 		if i == m.selected {
@@ -109,6 +115,7 @@ func (m *ChainSelectModal) View() string {
 		} else {
 			s.WriteString(line)
 		}
+
 		s.WriteString("\n")
 
 		if i == m.selected {
@@ -117,6 +124,7 @@ func (m *ChainSelectModal) View() string {
 				if step.WaitFor != "" && step.WaitFor != config.WaitSuccess {
 					stepLine += fmt.Sprintf(" (wait: %s)", step.WaitFor)
 				}
+
 				s.WriteString(ui.SubtitleStyle.Render(stepLine))
 				s.WriteString("\n")
 			}

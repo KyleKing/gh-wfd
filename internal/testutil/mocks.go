@@ -7,13 +7,13 @@ import (
 
 // MockGitHubClient implements both chain.GitHubClient and watcher.GitHubClient interfaces.
 type MockGitHubClient struct {
-	Runs            map[int64]*github.WorkflowRun
-	Jobs            map[int64][]github.Job
-	LatestID        int64
+	Runs             map[int64]*github.WorkflowRun
+	Jobs             map[int64][]github.Job
+	LatestID         int64
 	LatestByWorkflow map[string]int64 // Map workflow name to run ID
-	Err             error
-	owner           string
-	repo            string
+	Err              error
+	owner            string
+	repo             string
 }
 
 // NewMockGitHubClient creates a MockGitHubClient with sensible defaults.
@@ -32,6 +32,7 @@ func NewMockGitHubClient() *MockGitHubClient {
 func (m *MockGitHubClient) WithOwnerRepo(owner, repo string) *MockGitHubClient {
 	m.owner = owner
 	m.repo = repo
+
 	return m
 }
 
@@ -57,9 +58,11 @@ func (m *MockGitHubClient) GetWorkflowRun(runID int64) (*github.WorkflowRun, err
 	if m.Err != nil {
 		return nil, m.Err
 	}
+
 	if run, ok := m.Runs[runID]; ok {
 		return run, nil
 	}
+
 	return &github.WorkflowRun{ID: runID, Status: github.StatusQueued}, nil
 }
 
@@ -67,6 +70,7 @@ func (m *MockGitHubClient) GetWorkflowRunJobs(runID int64) ([]github.Job, error)
 	if m.Err != nil {
 		return nil, m.Err
 	}
+
 	return m.Jobs[runID], nil
 }
 

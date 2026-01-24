@@ -46,15 +46,19 @@ on:
 	if !ok {
 		t.Fatal("expected 'environment' input")
 	}
+
 	if env.InputType() != "choice" {
 		t.Errorf("expected type 'choice', got %q", env.InputType())
 	}
+
 	if !env.Required {
 		t.Error("expected 'environment' to be required")
 	}
+
 	if len(env.Options) != 2 {
 		t.Errorf("expected 2 options, got %d", len(env.Options))
 	}
+
 	if env.Default != "staging" {
 		t.Errorf("expected default 'staging', got %q", env.Default)
 	}

@@ -70,6 +70,7 @@ func TestRealExecutor_SafetyCheck_BlocksMutations(t *testing.T) {
 				if tt.shouldPanic && r == nil {
 					t.Errorf("expected panic for command: %s %v", tt.command, tt.args)
 				}
+
 				if !tt.shouldPanic && r != nil {
 					t.Errorf("unexpected panic for command: %s %v: %v", tt.command, tt.args, r)
 				}

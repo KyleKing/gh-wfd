@@ -61,6 +61,7 @@ func NewSimpleBranchModal(title string, branches []string, current string, defau
 	ti.Cursor.Style = ti.Cursor.Style.UnsetBackground()
 
 	selected := 0
+
 	for i, branch := range pinnedBranches {
 		if branch == current {
 			selected = i
@@ -88,9 +89,11 @@ func (m *SimpleBranchModal) SetSize(width, height int) {
 	if maxHeight > 30 {
 		maxHeight = 30
 	}
+
 	if maxHeight < 10 {
 		maxHeight = 10
 	}
+
 	m.maxHeight = maxHeight - 6 // Account for title, filter, help text
 }
 
@@ -103,6 +106,7 @@ func (m *SimpleBranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			case "enter":
 				m.filtering = false
 				m.filterInput.Blur()
+
 				return m, nil
 			case "esc":
 				if m.filterInput.Value() == "" {
@@ -112,11 +116,13 @@ func (m *SimpleBranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 					m.filterInput.SetValue("")
 					m.applyFilter()
 				}
+
 				return m, nil
 			default:
 				var cmd tea.Cmd
 				m.filterInput, cmd = m.filterInput.Update(msg)
 				m.applyFilter()
+
 				return m, cmd
 			}
 		}
@@ -136,7 +142,9 @@ func (m *SimpleBranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if m.selected < len(m.filteredBranches) {
 				m.result = m.filteredBranches[m.selected]
 			}
+
 			m.done = true
+
 			return m, func() tea.Msg {
 				return BranchResultMsg{Value: m.result}
 			}
@@ -153,6 +161,7 @@ func (m *SimpleBranchModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			}
 		}
 	}
+
 	return m, nil
 }
 
@@ -162,6 +171,7 @@ func (m *SimpleBranchModal) applyFilter() {
 		m.filteredBranches = m.pinnedBranches
 		m.selected = 0
 		m.scrollOffset = 0
+
 		return
 	}
 
@@ -174,14 +184,17 @@ func (m *SimpleBranchModal) applyFilter() {
 	if m.selected >= len(m.filteredBranches) {
 		m.selected = 0
 	}
+
 	m.scrollOffset = 0
 }
 
 func (m *SimpleBranchModal) adjustScroll() {
 	visibleLines := m.maxHeight
+
 	if m.selected < m.scrollOffset {
 		m.scrollOffset = m.selected
 	}
+
 	if m.selected >= m.scrollOffset+visibleLines {
 		m.scrollOffset = m.selected - visibleLines + 1
 	}
@@ -206,6 +219,7 @@ func (m *SimpleBranchModal) View() string {
 
 	// Branch list
 	visibleLines := m.maxHeight
+
 	endIdx := m.scrollOffset + visibleLines
 	if endIdx > len(m.filteredBranches) {
 		endIdx = len(m.filteredBranches)
@@ -233,6 +247,7 @@ func (m *SimpleBranchModal) View() string {
 			}
 
 			s.WriteString(style.Render(cursor + branch + indicator))
+
 			if i < endIdx-1 {
 				s.WriteString("\n")
 			}
@@ -242,24 +257,29 @@ func (m *SimpleBranchModal) View() string {
 		if len(m.filteredBranches) > visibleLines {
 			s.WriteString("\n")
 			s.WriteString(ui.SubtitleStyle.Render("  "))
+
 			scrollInfo := ""
 			if m.scrollOffset > 0 {
 				scrollInfo += "↑ "
 			}
+
 			scrollInfo += "  "
 			if endIdx < len(m.filteredBranches) {
 				scrollInfo += "↓"
 			}
+
 			s.WriteString(ui.SubtitleStyle.Render(scrollInfo))
 		}
 	}
 
 	// Help
 	s.WriteString("\n\n")
+
 	helpText := "[↑↓] navigate  [enter] select  [esc] cancel"
 	if m.filtering {
 		helpText = "[enter] done filtering  [esc] clear/cancel"
 	}
+
 	s.WriteString(ui.HelpStyle.Render(helpText))
 
 	return s.String()

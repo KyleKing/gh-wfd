@@ -15,9 +15,11 @@ func ExportAsBash(chainName string, chain *config.Chain, variables map[string]st
 
 	sb.WriteString("#!/bin/bash\n")
 	sb.WriteString(fmt.Sprintf("# Chain: %s\n", chainName))
+
 	if chain.Description != "" {
 		sb.WriteString(fmt.Sprintf("# %s\n", chain.Description))
 	}
+
 	sb.WriteString("#\n")
 	sb.WriteString("# WARNING: This is a simplified export.\n")
 	sb.WriteString("# Wait conditions and failure handling are not included.\n")
@@ -28,9 +30,11 @@ func ExportAsBash(chainName string, chain *config.Chain, variables map[string]st
 
 	if len(variables) > 0 {
 		sb.WriteString("# Variables:\n")
+
 		for k, v := range variables {
 			sb.WriteString(fmt.Sprintf("#   %s = %s\n", k, v))
 		}
+
 		sb.WriteString("\n")
 	}
 

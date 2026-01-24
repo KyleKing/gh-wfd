@@ -1,9 +1,9 @@
 [tools]
 actionlint = "latest"
 go = "latest"
-"go:github.com/Zxilly/go-size-analyzer/cmd/gsa" = "latest"
-"go:github.com/golangci/golangci-lint/cmd/golangci-lint" = "latest"
-"go:github.com/segmentio/golines" = "latest"
+"go:github.com/Zxilly/go-size-analyzer/cmd/gsa" = "1.10.2"
+"golangci-lint" = "2.8.0"  # https://golangci-lint.run/docs/welcome/install/local/#mise
+"go:github.com/golangci/golines" = "0.14.0"
 hk = "0.8.2"
 ls-lint = "latest"
 "pipx:commitizen" = "latest"

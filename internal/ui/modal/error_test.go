@@ -18,6 +18,7 @@ func TestErrorModal_Display(t *testing.T) {
 	if !strings.Contains(view, "Test Error") {
 		t.Error("view should contain title")
 	}
+
 	if !strings.Contains(view, "Something went wrong") {
 		t.Error("view should contain message")
 	}
@@ -67,6 +68,7 @@ func TestErrorModal_MultilineMessage(t *testing.T) {
 	if !strings.Contains(view, "Line 1") {
 		t.Error("view should contain first line")
 	}
+
 	if !strings.Contains(view, "Line 3") {
 		t.Error("view should contain last line")
 	}

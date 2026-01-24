@@ -20,11 +20,11 @@ type LiveViewModal struct {
 }
 
 type liveViewKeyMap struct {
-	Close      key.Binding
-	Up         key.Binding
-	Down       key.Binding
-	Clear      key.Binding
-	ClearAll   key.Binding
+	Close    key.Binding
+	Up       key.Binding
+	Down     key.Binding
+	Clear    key.Binding
+	ClearAll key.Binding
 }
 
 func defaultLiveViewKeyMap() liveViewKeyMap {
@@ -63,17 +63,20 @@ func (m *LiveViewModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 		case key.Matches(msg, m.keys.Clear):
 			if len(m.runs) > 0 && m.selected < len(m.runs) {
 				m.done = true
+
 				return m, func() tea.Msg {
 					return LiveViewClearMsg{RunID: m.runs[m.selected].RunID}
 				}
 			}
 		case key.Matches(msg, m.keys.ClearAll):
 			m.done = true
+
 			return m, func() tea.Msg {
 				return LiveViewClearAllMsg{}
 			}
 		}
 	}
+
 	return m, nil
 }
 
@@ -96,6 +99,7 @@ func (m *LiveViewModal) View() string {
 		s.WriteString(ui.SubtitleStyle.Render("No runs being watched"))
 		s.WriteString("\n\n")
 		s.WriteString(ui.HelpStyle.Render("Press l or Esc to close"))
+
 		return s.String()
 	}
 
@@ -113,6 +117,7 @@ func (m *LiveViewModal) View() string {
 		} else {
 			s.WriteString(line)
 		}
+
 		s.WriteString("\n")
 
 		if i == m.selected {
@@ -189,6 +194,7 @@ func FormatStatusBar(runs []watcher.WatchedRun) string {
 	active := 0
 	success := 0
 	failed := 0
+
 	for _, run := range runs {
 		switch {
 		case run.IsActive():
@@ -204,9 +210,11 @@ func FormatStatusBar(runs []watcher.WatchedRun) string {
 	if active > 0 {
 		parts = append(parts, fmt.Sprintf("%d active", active))
 	}
+
 	if success > 0 {
 		parts = append(parts, fmt.Sprintf("%d done", success))
 	}
+
 	if failed > 0 {
 		parts = append(parts, fmt.Sprintf("%d failed", failed))
 	}

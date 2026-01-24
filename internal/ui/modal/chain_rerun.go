@@ -53,6 +53,7 @@ func NewChainRerunModal(entry *frecency.HistoryEntry) *ChainRerunModal {
 				action: "resume",
 				step:   i,
 			})
+
 			break
 		}
 	}
@@ -78,11 +79,13 @@ func (m *ChainRerunModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 			if m.selectedIndex > 0 {
 				m.selectedIndex--
 			}
+
 			return m, nil
 		case key.Matches(msg, m.keys.Down):
 			if m.selectedIndex < len(m.options)-1 {
 				m.selectedIndex++
 			}
+
 			return m, nil
 		case key.Matches(msg, m.keys.Confirm):
 			opt := m.options[m.selectedIndex]
@@ -92,13 +95,16 @@ func (m *ChainRerunModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 				ResumeFromStep: opt.step,
 				HistoryEntry:   m.entry,
 			}
+
 			return m, func() tea.Msg { return m.result }
 		case key.Matches(msg, m.keys.Cancel):
 			m.done = true
 			m.result = ChainRerunResultMsg{Action: "cancel"}
+
 			return m, func() tea.Msg { return m.result }
 		}
 	}
+
 	return m, nil
 }
 
@@ -106,12 +112,12 @@ func (m *ChainRerunModal) Update(msg tea.Msg) (Context, tea.Cmd) {
 func (m *ChainRerunModal) View() string {
 	var s strings.Builder
 
-	s.WriteString(ui.TitleStyle.Render(fmt.Sprintf("Re-run Chain: %s", m.entry.ChainName)))
+	s.WriteString(ui.TitleStyle.Render("Re-run Chain: " + m.entry.ChainName))
 	s.WriteString("\n\n")
 
 	s.WriteString(ui.SubtitleStyle.Render("Previous Run:"))
 	s.WriteString("\n")
-	s.WriteString(ui.NormalStyle.Render(fmt.Sprintf("  Branch: %s", m.entry.Branch)))
+	s.WriteString(ui.NormalStyle.Render("  Branch: " + m.entry.Branch))
 	s.WriteString("\n")
 	s.WriteString(ui.NormalStyle.Render(fmt.Sprintf("  Steps: %d", len(m.entry.StepResults))))
 	s.WriteString("\n\n")
@@ -119,20 +125,24 @@ func (m *ChainRerunModal) View() string {
 	if len(m.entry.StepResults) > 0 {
 		s.WriteString(ui.SubtitleStyle.Render("Step Results:"))
 		s.WriteString("\n")
+
 		for i, step := range m.entry.StepResults {
 			status := step.Status
 			if step.Conclusion != "" {
 				status = step.Conclusion
 			}
+
 			icon := "+"
 			if status == "failed" || status == "failure" {
 				icon = "x"
 			} else if status == "skipped" {
 				icon = "-"
 			}
+
 			s.WriteString(ui.NormalStyle.Render(fmt.Sprintf("  %s %d. %s", icon, i+1, step.Workflow)))
 			s.WriteString("\n")
 		}
+
 		s.WriteString("\n")
 	}
 
@@ -142,10 +152,12 @@ func (m *ChainRerunModal) View() string {
 	for i, opt := range m.options {
 		indicator := "  "
 		style := ui.TableRowStyle
+
 		if i == m.selectedIndex {
 			indicator = "> "
 			style = ui.TableSelectedStyle
 		}
+
 		s.WriteString(style.Render(indicator + opt.label))
 		s.WriteString("\n")
 	}

@@ -1,7 +1,9 @@
 package exec
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -83,19 +85,21 @@ func (m *MockExecutor) AddCommand(name string, args []string, stdout, stderr str
 
 // AddGHRunView is a convenience method for adding gh run view commands.
 func (m *MockExecutor) AddGHRunView(runID int64, jobID int64, logOutput string) {
-	args := []string{"run", "view", fmt.Sprintf("%d", runID), "--log"}
+	args := []string{"run", "view", strconv.FormatInt(runID, 10), "--log"}
 	if jobID > 0 {
-		args = append(args, "--job", fmt.Sprintf("%d", jobID))
+		args = append(args, "--job", strconv.FormatInt(jobID, 10))
 	}
+
 	m.AddCommand("gh", args, logOutput, "", nil)
 }
 
 // AddGHRunViewError is a convenience method for adding failing gh run view commands.
 func (m *MockExecutor) AddGHRunViewError(runID int64, jobID int64, stderr string, err error) {
-	args := []string{"run", "view", fmt.Sprintf("%d", runID), "--log"}
+	args := []string{"run", "view", strconv.FormatInt(runID, 10), "--log"}
 	if jobID > 0 {
-		args = append(args, "--job", fmt.Sprintf("%d", jobID))
+		args = append(args, "--job", strconv.FormatInt(jobID, 10))
 	}
+
 	m.AddCommand("gh", args, "", stderr, err)
 }
 
@@ -112,11 +116,13 @@ func (m *MockExecutor) AddGHWorkflowRun(workflow, branch string, inputs map[stri
 	if branch != "" {
 		args = append(args, "--ref", branch)
 	}
+
 	for k, v := range inputs {
 		if v != "" {
 			args = append(args, "-f", k+"="+v)
 		}
 	}
+
 	m.AddCommand("gh", args, "", "", nil)
 }
 
@@ -126,6 +132,7 @@ func (m *MockExecutor) AddGHWorkflowRunError(workflow, branch string, stderr str
 	if branch != "" {
 		args = append(args, "--ref", branch)
 	}
+
 	m.AddCommand("gh", args, "", stderr, err)
 }
 
@@ -149,6 +156,7 @@ func (m *MockExecutor) AddGHAPILatestRun(owner, repo, workflow string, runID int
 	if workflow != "" {
 		path += "&workflow=" + workflow
 	}
+
 	runsJSON := fmt.Sprintf(`{"total_count":1,"workflow_runs":[{"id":%d,"name":"CI","status":"%s"}]}`, runID, status)
 	m.AddCommand("gh", []string{"api", path}, runsJSON, "", nil)
 }
@@ -161,9 +169,9 @@ func (m *MockExecutor) AddGHVersion(version string) {
 // AddGHAuthStatus mocks the gh auth status command.
 func (m *MockExecutor) AddGHAuthStatus(authenticated bool, username string) {
 	if authenticated {
-		m.AddCommand("gh", []string{"auth", "status"}, fmt.Sprintf("✓ Logged in to github.com as %s", username), "", nil)
+		m.AddCommand("gh", []string{"auth", "status"}, "✓ Logged in to github.com as "+username, "", nil)
 	} else {
-		m.AddCommand("gh", []string{"auth", "status"}, "", "You are not logged in", fmt.Errorf("exit status 1"))
+		m.AddCommand("gh", []string{"auth", "status"}, "", "You are not logged in", errors.New("exit status 1"))
 	}
 }
 
@@ -191,6 +199,7 @@ func (m *MockExecutor) matchesPattern(cmd, pattern string) bool {
 		if pp == "*" {
 			continue
 		}
+
 		if pp != cmdParts[i] {
 			return false
 		}
