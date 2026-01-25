@@ -41,11 +41,10 @@ linters:
     - wastedassign
     - wrapcheck
     - wsl
-
-linters-settings:
-  revive:
-    enable-all-rules: true
-  staticcheck:
-    checks: ["all"]
-  testifylint:
-    enable-all: true
+  settings:
+    revive:
+      enable-all-rules: true
+    staticcheck:
+      checks: ["all"]
+    testifylint:
+      enable-all: true
